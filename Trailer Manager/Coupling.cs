@@ -31,6 +31,7 @@ namespace IngameScript
 
             public IMyCubeGrid getOtherGrid(IMyCubeGrid grid)
             {
+                if (null == B) return null;
                 if (grid.Equals(A.Base.CubeGrid) && B.IsAttached)
                     return B.Base.CubeGrid;
                 if (grid.Equals(B.Base.CubeGrid) && A.IsAttached)
