@@ -46,7 +46,7 @@ namespace IngameScript
                 IMyCubeGrid NextGrid;
                 foreach (var coupling in program.Couplings.Values)
                 {
-                    if (RearHitch.IsAttached && coupling.ContainsPart(RearHitch.Top))
+                    if (null != RearHitch && RearHitch.IsAttached && coupling.ContainsPart(RearHitch.Top))
                     {
                         NextGrid = coupling.GetOtherGrid(this.Grid);
                         if (null != NextGrid)
