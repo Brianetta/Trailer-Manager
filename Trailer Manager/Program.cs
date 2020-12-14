@@ -30,8 +30,31 @@ namespace IngameScript
         MyIni ini = new MyIni();
         Trailer FirstTrailer;
 
+        private void LegacyUpdate()
+        {
+            GridTerminalSystem.GetBlocksOfType(Blocks, block => block.IsSameConstructAs(Me) && ((block is IMyMotorAdvancedStator) || (block is IMyTimerBlock)));
+            Hinges = Blocks.OfType<IMyMotorAdvancedStator>().ToList();
+            List<IMyTimerBlock> Timers = Blocks.OfType<IMyTimerBlock>().ToList();
+            foreach (var hinge in Hinges)
+            {
+                bool rear = (hinge.CustomName.Contains(" Hinge Rear"));
+                hinge.CustomData = "[" + Section + "]\nrear=" + rear.ToString() + (rear ? "" : "\nname=" + hinge.CubeGrid.CustomName);
+                Echo(hinge.CustomName);
+            }
+            foreach (var timer in Timers)
+            {
+                if (timer.CustomName.Contains(" Pack"))
+                    timer.CustomData = "[" + Section + "]\ntask=stow";
+                if (timer.CustomName.Contains(" Unpack"))
+                    timer.CustomData = "[" + Section + "]\ntask=deploy";
+                Echo(timer.CustomName);
+            }
+        }
+
         private void BuildConsist()
         {
+            Trailers.Clear();
+            Blocks.Clear();
             GridTerminalSystem.GetBlocksOfType(Blocks, block => block.IsSameConstructAs(Me));
             // Find all the hinges
             Hinges = Blocks.OfType<IMyMotorAdvancedStator>().ToList();
@@ -66,6 +89,7 @@ namespace IngameScript
             }
 
             GridsFound.Clear();
+            Couplings.Clear();
             // Find all grids with hinge parts on them (some of which will be all of the couplings)
             foreach (var part in HingeParts)
             {
@@ -137,16 +161,14 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
+            if (argument == "LegacyUpdate")
+            {
+                LegacyUpdate();
+                BuildConsist();
+            }
+            if (argument.ToLower() == "rebuild")
+                BuildConsist();
             RecurseTrailers(FirstTrailer);
-            // The main entry point of the script, invoked every time
-            // one of the programmable block's Run actions are invoked,
-            // or the script updates itself. The updateSource argument
-            // describes where the update came from. Be aware that the
-            // updateSource is a  bitfield  and might contain more than 
-            // one update type.
-            // 
-            // The method itself is required, but the arguments above
-            // can be removed if not needed.
         }
     }
 }
