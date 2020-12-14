@@ -1,5 +1,39 @@
-﻿R e a d m e
------------
+﻿Trailer Manager
+===============
 
-In this file you can include any instructions or other comments you want to have injected onto the 
-top of your final script. You can safely delete this file if you do not want any such comments.
+There is no configuration to edit in this script. Configuration is set by means
+of the Custom Data field in the trailer's hinges, the programmable block or in
+any terminal block with a screen.
+
+Hinge example:
+--------------
+
+[trailer]
+rear=false
+name=Trailer Name
+
+At least one hinge must have rear set to "false". This is the hinge at the
+front, by which the trailer is towed. If there is a hinge at the rear, change
+reat to "true" in that hinge's Custom Data.
+
+The name of the trailer defaults to the name of the grid, if the name line is
+missing.
+
+Screen/Cockpit example:
+-----------------------
+
+[trailer]
+display=0
+
+Change the number to the screen that you wish to use; numbers start at 0, so a
+five-screen cockpit has screens 0, 1, 2, 3 and 4.
+
+Programmable block example:
+---------------------------
+
+[trailer]
+autodeploy=true
+
+Auto-deploy can be turned off by setting autodeploy to "false". This will stop
+the script attempting to trigger the unpack or deploy function after a trailer
+has been disconnected. Change to false if you don't want this sort of magic.

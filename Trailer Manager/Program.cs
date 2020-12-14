@@ -20,16 +20,17 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
-
         List<IMyTerminalBlock> Blocks = new List<IMyTerminalBlock>();
         List<IMyMotorAdvancedStator> Hinges;
         List<IMyAttachableTopBlock> HingeParts = new List<IMyAttachableTopBlock>();
-        Dictionary<IMyCubeGrid,Trailer> Trailers = new Dictionary<IMyCubeGrid, Trailer>();
-        Dictionary<IMyCubeGrid,Coupling> Couplings = new Dictionary<IMyCubeGrid, Coupling>();
+        Dictionary<IMyCubeGrid, Trailer> Trailers = new Dictionary<IMyCubeGrid, Trailer>();
+        Dictionary<IMyCubeGrid, Coupling> Couplings = new Dictionary<IMyCubeGrid, Coupling>();
         List<IMyCubeGrid> GridsFound = new List<IMyCubeGrid>();
+        const string Section = "trailer";
+        MyIni ini = new MyIni();
         Trailer FirstTrailer;
 
-        private void buildConsist()
+        private void BuildConsist()
         {
             GridTerminalSystem.GetBlocksOfType(Blocks, block => block.IsSameConstructAs(Me));
             // Find all the hinges
@@ -39,24 +40,25 @@ namespace IngameScript
             foreach (var hinge in Hinges.ToList())
             {
                 // Only the first one found. If there's more than one, that's user error, but unlikely to matter.
-                if (!GridsFound.Contains(hinge.CubeGrid) && (hinge.CustomName.Contains("Hinge Front")))
+                if (!GridsFound.Contains(hinge.CubeGrid) && ((MyIni.HasSection(hinge.CustomData,Section) && ini.TryParse(hinge.CustomData) && !ini.Get(Section, "rear").ToBoolean())))
                 {
                     GridsFound.Add(hinge.CubeGrid);
                     Trailers.Add(hinge.CubeGrid, new Trailer(this, hinge));
                     Hinges.Remove(hinge);
-                    if(hinge.IsAttached)
+                    if (hinge.IsAttached)
                         HingeParts.Add(hinge.Top);
                 }
             }
             // Second iteration finds all of the hinges not matched in the first iteration
             foreach (var hinge in Hinges)
             {
-                if (GridsFound.Contains(hinge.CubeGrid) && (hinge.CustomName.Contains("Hinge Rear") || hinge.CustomName.Contains("Tow Hitch")))
+                if ((ini.TryParse(hinge.CustomData) && ini.Get(Section, "hitch").ToBoolean()) || GridsFound.Contains(hinge.CubeGrid))
                 {
-                    Trailers[hinge.CubeGrid].setRearHitch(hinge);
-                    if (hinge.IsAttached) 
+                    Trailers[hinge.CubeGrid].SetRearHitch(hinge);
+                    if (hinge.IsAttached)
                         HingeParts.Add(hinge.Top);
-                } else if (hinge.CubeGrid.Equals(Me.CubeGrid))
+                }
+                else if (hinge.CubeGrid.Equals(Me.CubeGrid))
                 {
                     if (hinge.IsAttached)
                         HingeParts.Add(hinge.Top);
@@ -65,13 +67,14 @@ namespace IngameScript
 
             GridsFound.Clear();
             // Find all grids with hinge parts on them (some of which will be all of the couplings)
-            foreach (var part in HingeParts) 
+            foreach (var part in HingeParts)
             {
-                if (GridsFound.Contains(part.CubeGrid)) 
+                if (GridsFound.Contains(part.CubeGrid))
                 {
                     // This is the second hinge part
                     Couplings[part.CubeGrid].AddPart(part);
-                } else
+                }
+                else
                 {
                     // This is the first hinge part
                     Couplings.Add(part.CubeGrid, new Coupling(part));
@@ -90,7 +93,7 @@ namespace IngameScript
             IMyCubeGrid NextGrid;
             foreach (var coupling in Couplings.Values)
             {
-                NextGrid = coupling.getOtherGrid(Me.CubeGrid);
+                NextGrid = coupling.GetOtherGrid(Me.CubeGrid);
                 if (null != NextGrid)
                 {
                     FirstTrailer = Trailers[NextGrid];
@@ -98,7 +101,7 @@ namespace IngameScript
                 }
             }
             // ...and connect the trailers to each other
-            foreach(Trailer trailer in Trailers.Values)
+            foreach (Trailer trailer in Trailers.Values)
             {
                 trailer.DetectNextTrailer();
             }
@@ -119,8 +122,7 @@ namespace IngameScript
 
         public Program()
         {
-            buildConsist();
-            RecurseTrailers(FirstTrailer);
+            BuildConsist();
         }
 
         public void Save()
@@ -135,6 +137,7 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
+            RecurseTrailers(FirstTrailer);
             // The main entry point of the script, invoked every time
             // one of the programmable block's Run actions are invoked,
             // or the script updates itself. The updateSource argument

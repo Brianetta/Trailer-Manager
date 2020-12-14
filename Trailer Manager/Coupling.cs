@@ -29,7 +29,7 @@ namespace IngameScript
                 return (A.Equals(part) || B.Equals(part));
             }
 
-            public IMyCubeGrid getOtherGrid(IMyCubeGrid grid)
+            public IMyCubeGrid GetOtherGrid(IMyCubeGrid grid)
             {
                 if (null == B) return null;
                 if (grid.Equals(A.Base.CubeGrid) && B.IsAttached)

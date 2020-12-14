@@ -1,6 +1,7 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using VRage.Game.ModAPI.Ingame;
+using VRage.Game.ModAPI.Ingame.Utilities;
 
 namespace IngameScript
 {
@@ -8,7 +9,7 @@ namespace IngameScript
     {
         class Trailer
         {
-            private IMyMotorAdvancedStator ForwardHitch, RearHitch;
+            private IMyMotorAdvancedStator RearHitch;
             private IMyCubeGrid Grid;
             public String Name;
             public Trailer NextTrailer;
@@ -16,13 +17,21 @@ namespace IngameScript
 
             public Trailer(Program program, IMyMotorAdvancedStator forwardHitch)
             {
-                this.ForwardHitch = forwardHitch;
                 this.Grid = forwardHitch.CubeGrid;
-                this.Name = forwardHitch.CustomName.Replace("Hinge Front","") + ' ' + forwardHitch.CubeGrid.CustomName;
                 this.program = program;
+                if (program.ini.TryParse(forwardHitch.CustomData))
+                {
+                    this.Name = program.ini.Get(Program.Section, "name").ToString();
+                    if (null == this.Name || this.Name.Length == 0)
+                        this.Name = forwardHitch.CubeGrid.CustomName;
+                }
+                else
+                {
+                    this.Name = forwardHitch.CubeGrid.CustomName;
+                }
             }
 
-            public void setRearHitch(IMyMotorAdvancedStator hinge)
+            public void SetRearHitch(IMyMotorAdvancedStator hinge)
             {
                 this.RearHitch = hinge;
             }
@@ -39,7 +48,7 @@ namespace IngameScript
                 {
                     if (RearHitch.IsAttached && coupling.ContainsPart(RearHitch.Top))
                     {
-                        NextGrid = coupling.getOtherGrid(this.Grid);
+                        NextGrid = coupling.GetOtherGrid(this.Grid);
                         if (null != NextGrid)
                         {
                             NextTrailer = program.Trailers[NextGrid];
