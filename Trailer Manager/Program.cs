@@ -15,20 +15,24 @@ using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game;
 using VRage;
 using VRageMath;
+using System;
 
 namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
+
         List<IMyTerminalBlock> Blocks = new List<IMyTerminalBlock>();
         List<IMyMotorAdvancedStator> Hinges;
         List<IMyAttachableTopBlock> HingeParts = new List<IMyAttachableTopBlock>();
         Dictionary<IMyCubeGrid, Trailer> Trailers = new Dictionary<IMyCubeGrid, Trailer>();
         Dictionary<IMyCubeGrid, Coupling> Couplings = new Dictionary<IMyCubeGrid, Coupling>();
+        
         List<IMyCubeGrid> GridsFound = new List<IMyCubeGrid>();
         const string Section = "trailer";
         MyIni ini = new MyIni();
         Trailer FirstTrailer;
+        List<ManagedDisplay> Displays = new List<ManagedDisplay>();
 
         private void LegacyUpdate()
         {
@@ -59,6 +63,8 @@ namespace IngameScript
             // Find all the hinges
             Hinges = Blocks.OfType<IMyMotorAdvancedStator>().ToList();
             GridsFound.Clear();
+            HingeParts.Clear();
+            FirstTrailer = null;
             // First iteration finds front hinges (by name) and creates the Trailer instances for them
             foreach (var hinge in Hinges.ToList())
             {
@@ -133,20 +139,48 @@ namespace IngameScript
 
         private void RecurseTrailers(Trailer trailer)
         {
-            if (null == trailer)
-            {
-                Echo("End of train");
-            }
-            else
+            if (null != trailer)
             {
                 Echo(trailer.Name);
                 RecurseTrailers(trailer.NextTrailer);
             }
         }
 
+        private void LoopTrailers(Trailer first)
+        {
+            for (Trailer trailer = first; null != trailer; trailer = trailer.NextTrailer)
+            {   
+                Echo(trailer.Name);
+            }
+        }
+
         public Program()
         {
+            // BuildConsist populates Blocks, so we run that first.
+
             BuildConsist();
+            FindDisplays();
+        }
+
+        private void FindDisplays()
+        {
+            foreach (IMyTerminalBlock TextSurfaceProvider in Blocks.OfType<IMyTextSurfaceProvider>())
+            {
+                if (((IMyTextSurfaceProvider)TextSurfaceProvider).SurfaceCount > 0 && (MyIni.HasSection(TextSurfaceProvider.CustomData, Section)))
+                {
+                    ini.TryParse(TextSurfaceProvider.CustomData);
+                    var displayNumber = ini.Get(Section, "display").ToUInt16();
+                    if (displayNumber < ((IMyTextSurfaceProvider)TextSurfaceProvider).SurfaceCount)
+                    {
+                        var display = ((IMyTextSurfaceProvider)TextSurfaceProvider).GetSurface(ini.Get(Section, "display").ToInt16());
+                        Displays.Add(new ManagedDisplay(display));
+                    }
+                    else
+                    {
+                        Echo("Warning: " + TextSurfaceProvider.CustomName + " doesn't have a display number " + ini.Get(Section, "display").ToUInt16().ToString());
+                    }
+                }
+            }
         }
 
         public void Save()
@@ -168,7 +202,11 @@ namespace IngameScript
             }
             if (argument.ToLower() == "rebuild")
                 BuildConsist();
-            RecurseTrailers(FirstTrailer);
+            LoopTrailers(FirstTrailer);
+            foreach(var display in Displays)
+            {
+                display.Render();
+            }
         }
     }
 }
