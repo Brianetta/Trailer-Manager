@@ -33,8 +33,8 @@ namespace IngameScript
         MyIni ini = new MyIni();
         Trailer FirstTrailer;
         List<ManagedDisplay> Displays = new List<ManagedDisplay>();
-        int selectedline = 1; // Menu selection position
-        int selectedtrailer = 1; // Selected trailer in menu (to recalculate selectedline in the event of a rebuild)
+        int selectedline = 0; // Menu selection position
+        Trailer selectedtrailer; // Selected trailer in menu (to recalculate selectedline in the event of a rebuild)
 
         private void LegacyUpdate()
         {
@@ -157,6 +157,12 @@ namespace IngameScript
 
             BuildConsist();
             FindDisplays();
+            ArrangeTrailersIntoTrain(FirstTrailer);
+            foreach (var display in Displays)
+            {
+                display.Render(Train, selectedline, selectedtrailer);
+                Echo(display.Debug());
+            }
         }
 
         private void FindDisplays()
@@ -196,25 +202,27 @@ namespace IngameScript
             {
                 LegacyUpdate();
                 BuildConsist();
+                ArrangeTrailersIntoTrain(FirstTrailer);
             }
             switch (argument.ToLower())
             {
                 case "rebuild":
                     BuildConsist();
+                    ArrangeTrailersIntoTrain(FirstTrailer);
                     break;
                 case "up":
-                    if (selectedline > 1) --selectedline;
+                    if (selectedline > 0) --selectedline;
                     break;
                 case "down":
-                    ++selectedline;
+                    if (selectedline < 1+Train.Count) ++selectedline;
                     break;
                 default:
                     break;
             }
-            ArrangeTrailersIntoTrain(FirstTrailer);
             foreach(var display in Displays)
             {
                 display.Render(Train, selectedline, selectedtrailer);
+                Echo(display.Debug());
             }
         }
     }
