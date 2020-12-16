@@ -27,12 +27,14 @@ namespace IngameScript
         List<IMyAttachableTopBlock> HingeParts = new List<IMyAttachableTopBlock>();
         Dictionary<IMyCubeGrid, Trailer> Trailers = new Dictionary<IMyCubeGrid, Trailer>();
         Dictionary<IMyCubeGrid, Coupling> Couplings = new Dictionary<IMyCubeGrid, Coupling>();
-        
+        List<Trailer> Train = new List<Trailer>();
         List<IMyCubeGrid> GridsFound = new List<IMyCubeGrid>();
         const string Section = "trailer";
         MyIni ini = new MyIni();
         Trailer FirstTrailer;
         List<ManagedDisplay> Displays = new List<ManagedDisplay>();
+        int selectedline = 1; // Menu selection position
+        int selectedtrailer = 1; // Selected trailer in menu (to recalculate selectedline in the event of a rebuild)
 
         private void LegacyUpdate()
         {
@@ -137,24 +139,19 @@ namespace IngameScript
             }
         }
 
-        private void RecurseTrailers(Trailer trailer)
+        private void ArrangeTrailersIntoTrain(Trailer first)
         {
-            if (null != trailer)
+            Train.Clear();
+            var trailer = first;
+            while (trailer != null)
             {
                 Echo(trailer.Name);
-                RecurseTrailers(trailer.NextTrailer);
+                Train.Add(trailer);
+                trailer = trailer.NextTrailer;
             }
         }
 
-        private void LoopTrailers(Trailer first)
-        {
-            for (Trailer trailer = first; null != trailer; trailer = trailer.NextTrailer)
-            {   
-                Echo(trailer.Name);
-            }
-        }
-
-        public Program()
+            public Program()
         {
             // BuildConsist populates Blocks, so we run that first.
 
@@ -200,12 +197,24 @@ namespace IngameScript
                 LegacyUpdate();
                 BuildConsist();
             }
-            if (argument.ToLower() == "rebuild")
-                BuildConsist();
-            LoopTrailers(FirstTrailer);
+            switch (argument.ToLower())
+            {
+                case "rebuild":
+                    BuildConsist();
+                    break;
+                case "up":
+                    if (selectedline > 1) --selectedline;
+                    break;
+                case "down":
+                    ++selectedline;
+                    break;
+                default:
+                    break;
+            }
+            ArrangeTrailersIntoTrain(FirstTrailer);
             foreach(var display in Displays)
             {
-                display.Render();
+                display.Render(Train, selectedline, selectedtrailer);
             }
         }
     }
