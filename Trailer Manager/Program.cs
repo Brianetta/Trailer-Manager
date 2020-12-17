@@ -35,6 +35,16 @@ namespace IngameScript
         List<ManagedDisplay> Displays = new List<ManagedDisplay>();
         int selectedline = 0; // Menu selection position
         Trailer selectedtrailer; // Selected trailer in menu (to recalculate selectedline in the event of a rebuild)
+        enum MenuOption {Top, AllTrailers, Trailer, Config };
+        MenuOption SelectedMenu = MenuOption.Top;
+
+        struct MenuItem
+        {
+            public String Sprite;
+            public float SpriteRotation;
+            public String MenuText;
+            public Action Action;
+        }
 
         private void LegacyUpdate()
         {
@@ -160,8 +170,7 @@ namespace IngameScript
             ArrangeTrailersIntoTrain(FirstTrailer);
             foreach (var display in Displays)
             {
-                display.Render(Train, selectedline, selectedtrailer);
-                Echo(display.Debug());
+                display.RenderTopMenu(Train, selectedline, selectedtrailer);
             }
         }
 
@@ -196,6 +205,34 @@ namespace IngameScript
             // needed.
         }
 
+        public void TopMenu()
+        {
+            // The main menu
+            foreach (var display in Displays)
+            {
+                display.RenderTopMenu(Train, selectedline, selectedtrailer);
+            }
+        }
+
+        public void AllTrailersMenu()
+        {
+            // Menu with functions for all trailers
+            foreach (var display in Displays)
+            {
+                display.RenderAllTrailersMenu(Train, selectedline);
+            }
+        }
+
+        public void TrailerMenu()
+        {
+            // Menu specific to a trailer
+        }
+
+        public void ConfigurationMenu()
+        {
+            // The config menu
+        }
+
         public void Main(string argument, UpdateType updateSource)
         {
             if (argument == "LegacyUpdate")
@@ -214,15 +251,67 @@ namespace IngameScript
                     if (selectedline > 0) --selectedline;
                     break;
                 case "down":
-                    if (selectedline < 1+Train.Count) ++selectedline;
+                    if (SelectedMenu==MenuOption.Top)
+                            if (selectedline < 1 + Train.Count) ++selectedline;
+                    break;
+                case "apply":
+                    if (SelectedMenu == MenuOption.Top)
+                    {
+                        if (selectedline == 0)
+                        {
+                            SelectedMenu = MenuOption.AllTrailers;
+                        }
+                        else if (selectedline > Train.Count)
+                        {
+                            SelectedMenu = MenuOption.Trailer;
+                        }
+                        else
+                        {
+                            selectedtrailer = Train[selectedline];
+                        }
+                        selectedline = 0;
+                    }
+                    else
+                    {
+                        switch (SelectedMenu)
+                        {
+                            case MenuOption.AllTrailers:
+                                selectedline = 0;
+                                break;
+                            case MenuOption.Trailer:
+                                if (Train.Contains(selectedtrailer))
+                                    selectedline = Train.IndexOf(selectedtrailer);
+                                break;
+                            case MenuOption.Config:
+                                selectedline = Train.Count + 1;
+                                break;
+                            default:
+                                selectedline = 0;
+                                break;
+                        }
+                        SelectedMenu = MenuOption.Top;
+                    }
                     break;
                 default:
                     break;
             }
-            foreach(var display in Displays)
+
+            switch (SelectedMenu)
             {
-                display.Render(Train, selectedline, selectedtrailer);
-                Echo(display.Debug());
+                case MenuOption.Top:
+                    TopMenu();
+                    break;
+                case MenuOption.AllTrailers:
+                    AllTrailersMenu();
+                    break;
+                case MenuOption.Trailer:
+                    TrailerMenu();
+                    break;
+                case MenuOption.Config:
+                    ConfigurationMenu();
+                    break;
+                default:
+                    break;
             }
         }
     }
