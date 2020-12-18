@@ -161,7 +161,7 @@ namespace IngameScript
                 foreach (var trailer in train)
                 {
                     ++renderLineCount;
-                    if (WindowPosition <= renderLineCount && renderLineCount <= WindowPosition+WindowSize)
+                    if (WindowPosition <= renderLineCount && renderLineCount <= WindowPosition + WindowSize)
                         AddTrailerLine(trailer);
                 }
                 ++renderLineCount;
@@ -170,8 +170,9 @@ namespace IngameScript
                 frame.Dispose();
             }
 
-            internal void RenderAllTrailersMenu(List<Trailer> train, int selectedline)
+            internal void RenderAllTrailersMenu(List<Trailer> train, int selectedline, List<Program.MenuItem> menuItems)
             {
+                SetWindowPosition(selectedline);
                 if (LastSelectedMenu != MenuOption.AllTrailers)
                 {
                     WindowPosition = 0;
@@ -183,8 +184,31 @@ namespace IngameScript
                 DrawCursor(ref frame);
                 AddHeading(ref frame);
                 Position.X = surface.TextPadding;
-                AddBackMenu();
+                int renderLineCount = 0;
+                if (WindowPosition == renderLineCount)
+                    AddBackMenu();
+                foreach (var menuItem in menuItems)
+                {
+                    ++renderLineCount;
+                    if (WindowPosition <= renderLineCount && renderLineCount <= WindowPosition + WindowSize)
+                        AddMenuItem(menuItem);
+                }
                 frame.Dispose();
+            }
+
+            private void SetWindowPosition(int selectedline)
+            {
+                CursorMenuPosition = selectedline - WindowPosition;
+                if (CursorMenuPosition < 0)
+                {
+                    CursorMenuPosition = 0;
+                    WindowPosition = selectedline;
+                }
+                if (CursorMenuPosition > WindowSize)
+                {
+                    CursorMenuPosition = WindowSize;
+                    WindowPosition = selectedline - WindowSize;
+                }
             }
         }
     }

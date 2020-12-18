@@ -37,6 +37,9 @@ namespace IngameScript
         Trailer selectedtrailer; // Selected trailer in menu (to recalculate selectedline in the event of a rebuild)
         enum MenuOption {Top, AllTrailers, Trailer, Config };
         MenuOption SelectedMenu = MenuOption.Top;
+        List<MenuItem> AllTrailersMenu = new List<MenuItem>();
+        List<MenuItem> TrailerMenu = new List<MenuItem>();
+        List<MenuItem> ConfigurationMenu = new List<MenuItem>();
 
         struct MenuItem
         {
@@ -44,6 +47,19 @@ namespace IngameScript
             public float SpriteRotation;
             public String MenuText;
             public Action Action;
+        }
+
+        void ParkTrailer (Trailer trailer)
+        {
+            Echo("Parking " + trailer.Name);
+        }
+
+        public void ParkAllTrailers()
+        {
+            foreach (Trailer trailer in Train)
+            {
+                ParkTrailer(trailer);
+            }
         }
 
         private void LegacyUpdate()
@@ -161,13 +177,16 @@ namespace IngameScript
             }
         }
 
-            public Program()
+        public Program()
         {
             // BuildConsist populates Blocks, so we run that first.
 
             BuildConsist();
             FindDisplays();
             ArrangeTrailersIntoTrain(FirstTrailer);
+
+            AllTrailersMenu.Add(new MenuItem(){ MenuText="Park all trailers",Sprite= "Circle",Action=ParkAllTrailers });
+
             foreach (var display in Displays)
             {
                 display.RenderTopMenu(Train, selectedline, selectedtrailer);
@@ -214,21 +233,21 @@ namespace IngameScript
             }
         }
 
-        public void AllTrailersMenu()
+        public void RenderAllTrailersMenu()
         {
             // Menu with functions for all trailers
             foreach (var display in Displays)
             {
-                display.RenderAllTrailersMenu(Train, selectedline);
+                display.RenderAllTrailersMenu(Train, selectedline, AllTrailersMenu);
             }
         }
 
-        public void TrailerMenu()
+        public void RenderTrailerMenu()
         {
             // Menu specific to a trailer
         }
 
-        public void ConfigurationMenu()
+        public void RenderConfigurationMenu()
         {
             // The config menu
         }
@@ -251,46 +270,47 @@ namespace IngameScript
                     if (selectedline > 0) --selectedline;
                     break;
                 case "down":
-                    if (SelectedMenu==MenuOption.Top)
-                            if (selectedline < 1 + Train.Count) ++selectedline;
+                    if (SelectedMenu == MenuOption.Top)
+                        if (selectedline < Train.Count) ++selectedline;
+                    if (SelectedMenu == MenuOption.AllTrailers)
+                        if (selectedline < AllTrailersMenu.Count) ++selectedline;
                     break;
                 case "apply":
-                    if (SelectedMenu == MenuOption.Top)
+                    switch (SelectedMenu)
                     {
-                        if (selectedline == 0)
-                        {
-                            SelectedMenu = MenuOption.AllTrailers;
-                        }
-                        else if (selectedline > Train.Count)
-                        {
-                            SelectedMenu = MenuOption.Trailer;
-                        }
-                        else
-                        {
-                            selectedtrailer = Train[selectedline];
-                        }
-                        selectedline = 0;
-                    }
-                    else
-                    {
-                        switch (SelectedMenu)
-                        {
-                            case MenuOption.AllTrailers:
-                                selectedline = 0;
-                                break;
-                            case MenuOption.Trailer:
+                        case MenuOption.Top:
+                            if (selectedline == 0)
+                                SelectedMenu = MenuOption.AllTrailers;
+                            else if (selectedline > Train.Count)
+                                SelectedMenu = MenuOption.Trailer;
+                            else
+                                selectedtrailer = Train[selectedline];
+                            selectedline = 0;
+                            break;
+                        case MenuOption.AllTrailers:
+                            Echo(selectedline.ToString());
+                            if (selectedline == 0)
+                                SelectedMenu = MenuOption.Top;
+                            else
+                                AllTrailersMenu[selectedline-1].Action();
+                            break;
+                        case MenuOption.Trailer:
+                            if (selectedline == 0)
+                            {
+                                SelectedMenu = MenuOption.Top;
                                 if (Train.Contains(selectedtrailer))
                                     selectedline = Train.IndexOf(selectedtrailer);
-                                break;
-                            case MenuOption.Config:
-                                selectedline = Train.Count + 1;
-                                break;
-                            default:
-                                selectedline = 0;
-                                break;
+                            }
+                            break;
+                        case MenuOption.Config:
+                            selectedline = Train.Count + 1;
+                            SelectedMenu = MenuOption.Top;
+                            break;
+                        default:
+                            selectedline = 0;
+                            SelectedMenu = MenuOption.Top;
+                            break;
                         }
-                        SelectedMenu = MenuOption.Top;
-                    }
                     break;
                 default:
                     break;
@@ -302,13 +322,13 @@ namespace IngameScript
                     TopMenu();
                     break;
                 case MenuOption.AllTrailers:
-                    AllTrailersMenu();
+                    RenderAllTrailersMenu();
                     break;
                 case MenuOption.Trailer:
-                    TrailerMenu();
+                    RenderTrailerMenu();
                     break;
                 case MenuOption.Config:
-                    ConfigurationMenu();
+                    RenderConfigurationMenu();
                     break;
                 default:
                     break;
