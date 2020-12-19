@@ -1,6 +1,7 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System;
 using VRage.Game.ModAPI.Ingame;
+using System.Collections.Generic;
 using VRage.Game.ModAPI.Ingame.Utilities;
 
 namespace IngameScript
@@ -9,11 +10,13 @@ namespace IngameScript
     {
         class Trailer
         {
-            private IMyMotorAdvancedStator RearHitch;
+            private IMyMotorAdvancedStator ForwardHitch, RearHitch;
             private IMyCubeGrid Grid;
-            public String Name;
+            public string Name;
             public Trailer NextTrailer;
             private Program program;
+            private List<IMyBatteryBlock> Batteries = new List<IMyBatteryBlock>();
+            private List<IMyMotorSuspension> Wheels = new List<IMyMotorSuspension>();
 
             public Trailer(Program program, IMyMotorAdvancedStator forwardHitch)
             {
@@ -29,11 +32,39 @@ namespace IngameScript
                 {
                     this.Name = forwardHitch.CubeGrid.CustomName;
                 }
+                this.ForwardHitch = forwardHitch;
             }
 
             public void SetRearHitch(IMyMotorAdvancedStator hinge)
             {
                 this.RearHitch = hinge;
+            }
+
+            public void AddBattery(IMyBatteryBlock battery)
+            {
+                Batteries.Add(battery);
+            }
+
+            public void SetBatteryChargeMode(ChargeMode chargeMode)
+            {
+                foreach (var battery in Batteries)
+                {
+                    battery.ChargeMode = chargeMode;
+                }
+            }
+            public void EnableBattery()
+            {
+                foreach (var battery in Batteries)
+                {
+                    battery.Enabled = true;
+                }
+            }
+            public void DisableBattery()
+            {
+                foreach (var battery in Batteries)
+                {
+                    battery.Enabled = false;
+                }
             }
 
             public IMyCubeGrid GetGrid()

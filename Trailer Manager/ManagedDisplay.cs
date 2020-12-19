@@ -113,7 +113,7 @@ namespace IngameScript
                     Position = Position + new Vector2(0, SpriteOffset),
                     RotationOrScale = menuItem.SpriteRotation,
                     Size = new Vector2(LineHeight, LineHeight),
-                    Color = Color.White,
+                    Color = (menuItem.SpriteColor == default(Color)) ? Color.White : menuItem.SpriteColor,
                 });
                 frame.Add(new MySprite()
                 {
@@ -121,7 +121,7 @@ namespace IngameScript
                     Data = menuItem.MenuText,
                     Position = Position + new Vector2(LineHeight * 1.2f, 0),
                     RotationOrScale = RegularFontSize,
-                    Color = Color.White,
+                    Color = (menuItem.TextColor == default(Color)) ? Color.Gray : menuItem.TextColor,
                     Alignment = TextAlignment.LEFT,
                     FontId = "White"
                 });
@@ -129,7 +129,7 @@ namespace IngameScript
 
             private void AddConfigurationMenu()
             {
-                AddMenuItem(new MenuItem() { MenuText = "Configuration", Sprite = "Construction" });
+                AddMenuItem(new MenuItem() { MenuText = "Configuration", Sprite = "Construction",TextColor=Color.White });
             }
             public void RenderTopMenu(List<Trailer> train, int selectedline, Trailer selectedtrailer)
             {

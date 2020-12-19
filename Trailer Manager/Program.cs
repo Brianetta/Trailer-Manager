@@ -45,20 +45,31 @@ namespace IngameScript
         {
             public String Sprite;
             public float SpriteRotation;
+            public Color SpriteColor;
+            public Color TextColor;
             public String MenuText;
             public Action Action;
         }
 
-        void ParkTrailer (Trailer trailer)
-        {
-            Echo("Parking " + trailer.Name);
-        }
-
-        public void ParkAllTrailers()
+        public void AllTrailersBatteryCharge(ChargeMode chargeMode)
         {
             foreach (Trailer trailer in Train)
             {
-                ParkTrailer(trailer);
+                trailer.SetBatteryChargeMode(chargeMode);
+            }
+        }
+        public void AllTrailersEnableBattery()
+        {
+            foreach (Trailer trailer in Train)
+            {
+                trailer.EnableBattery();
+            }
+        }
+        public void AllTrailersDisableBattery()
+        {
+            foreach (Trailer trailer in Train)
+            {
+                trailer.DisableBattery();
             }
         }
 
@@ -120,6 +131,12 @@ namespace IngameScript
                     if (hinge.IsAttached)
                         HingeParts.Add(hinge.Top);
                 }
+            }
+
+            // Get a list of all the batteries in each trailer
+            foreach(var Battery in Blocks.OfType<IMyBatteryBlock>().ToList()) {
+                if(Trailers.ContainsKey(Battery.CubeGrid))
+                    Trailers[Battery.CubeGrid].AddBattery(Battery);
             }
 
             GridsFound.Clear();
@@ -185,7 +202,11 @@ namespace IngameScript
             FindDisplays();
             ArrangeTrailersIntoTrain(FirstTrailer);
 
-            AllTrailersMenu.Add(new MenuItem(){ MenuText="Park all trailers",Sprite= "Circle",Action=ParkAllTrailers });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries recharge", Sprite = "IconEnergy",SpriteColor=Color.Yellow, Action = () => AllTrailersBatteryCharge(ChargeMode.Recharge)});
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries auto", Sprite = "IconEnergy", SpriteColor = Color.Green, Action = () => AllTrailersBatteryCharge(ChargeMode.Auto)});
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries discharge", Sprite = "IconEnergy", SpriteColor = Color.Cyan, Action = () => AllTrailersBatteryCharge(ChargeMode.Discharge)});
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries off", Sprite = "IconEnergy", SpriteColor = Color.DarkRed, Action = AllTrailersDisableBattery });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries on", Sprite = "IconEnergy", Action = AllTrailersEnableBattery });
 
             foreach (var display in Displays)
             {
@@ -224,7 +245,7 @@ namespace IngameScript
             // needed.
         }
 
-        public void TopMenu()
+        public void RenderTopMenu()
         {
             // The main menu
             foreach (var display in Displays)
@@ -319,7 +340,7 @@ namespace IngameScript
             switch (SelectedMenu)
             {
                 case MenuOption.Top:
-                    TopMenu();
+                    RenderTopMenu();
                     break;
                 case MenuOption.AllTrailers:
                     RenderAllTrailersMenu();
