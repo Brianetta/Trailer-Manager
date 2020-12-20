@@ -33,7 +33,22 @@ Programmable block example:
 
 [trailer]
 autodeploy=true
+mirror=true
 
 Auto-deploy can be turned off by setting autodeploy to "false". This will stop
 the script attempting to trigger the unpack or deploy function after a trailer
 has been disconnected. Change to false if you don't want this sort of magic.
+
+Mirroring causes the trailers' batteries, hydrogen tanks, engines & generators,
+and parking brakes to mirror those in use on the towing vehicle. 
+
+Timer example:
+--------------
+
+[trailer]
+task=stow
+
+The task setting can be "stow" or "pack", in which case it will be used to stow
+a trailer for travel. It can also be set to "deploy" or "unpack", in which case
+it will be used to deploy a travel for separate use in-position. If not set, or
+if set to some other value, it will be treated like any other timer.

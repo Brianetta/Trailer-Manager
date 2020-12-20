@@ -3,6 +3,7 @@ using System;
 using VRage.Game.ModAPI.Ingame;
 using System.Collections.Generic;
 using VRage.Game.ModAPI.Ingame.Utilities;
+using SpaceEngineers.Game.ModAPI.Ingame;
 using VRageMath;
 
 namespace IngameScript
@@ -22,6 +23,10 @@ namespace IngameScript
             private List<IMyGasTank> HTanks = new List<IMyGasTank>();
             private List<IMyGasGenerator> HGens = new List<IMyGasGenerator>();
             private IMyShipController controller;
+            private IMyTimerBlock StowTimer, DeployTimer;
+            private List<IMyTimerBlock> Timers = new List<IMyTimerBlock>();
+
+            internal List<MenuItem> Menu = new List<MenuItem>();
 
             public Trailer(Program program, IMyMotorAdvancedStator forwardHitch)
             {
@@ -68,6 +73,15 @@ namespace IngameScript
             public void AddController(IMyShipController controller)
             {
                 this.controller = controller;
+            }
+            public void AddTimer(IMyTimerBlock timer, TimerTask task = TimerTask.Menu)
+            {
+                // Pack is used to flag when a timer is for stowing (packing) or deploying (unpacking)
+                if (task == TimerTask.Stow)
+                    StowTimer = timer;
+                else if (task == TimerTask.Deploy)
+                    DeployTimer = timer;
+                else Timers.Add(timer);
             }
 
             public void SetBatteryChargeMode(ChargeMode chargeMode)
@@ -149,6 +163,22 @@ namespace IngameScript
                     controller.HandBrake =false;
                 ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Yellow, Message = "Handbrake disengaged", Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds", duration = 4 });
             }
+            public void Stow()
+            {
+                StowTimer.Trigger();
+                if (null != controller)
+                    controller.HandBrake = true;
+                ForwardHitch.RotorLock = true;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Yellow, Message = "Trailer Stowed", Sprite = "Arrow", duration = 4 });
+            }
+            public void Deploy()
+            {
+                DeployTimer.Trigger();
+                if (null != controller)
+                    controller.HandBrake = false;
+                ForwardHitch.RotorLock = false;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.GreenYellow, Message = "Trailer Deployed", Sprite = "Arrow",SpriteRotation = (float)Math.PI, duration = 4 });
+            }
 
             public IMyCubeGrid GetGrid()
             {
@@ -171,6 +201,21 @@ namespace IngameScript
                     }
                 }
                 return false;
+            }
+
+            public void BuildMenu(Action BackMenuAction)
+            {
+                Menu.Clear();
+                Menu.Add(new MenuItem() { MenuText = Name, TextColor = Color.White, Sprite = "AH_PullUp", SpriteColor = Color.White, SpriteRotation = (float)(1.5f * Math.PI), Action = BackMenuAction });
+                if (Batteries.Count > 0)
+                {
+                    Menu.Add(new MenuItem() { MenuText = "Unpack / Deploy", Sprite = "Arrow", SpriteRotation = (float)Math.PI, TextColor = Color.Gray, SpriteColor = Color.Green, Action = Deploy });
+                    Menu.Add(new MenuItem() { MenuText = "Pack / Stow for travel", Sprite = "Arrow", TextColor = Color.Gray, SpriteColor = Color.YellowGreen, Action = Stow });
+                    Menu.Add(new MenuItem() { MenuText = "Batteries recharge", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Yellow, Action = () => SetBatteryChargeMode(ChargeMode.Recharge) });
+                    Menu.Add(new MenuItem() { MenuText = "Batteries auto", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Green, Action = () => SetBatteryChargeMode(ChargeMode.Auto) });
+                    Menu.Add(new MenuItem() { MenuText = "Batteries discharge", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Cyan, Action = () => SetBatteryChargeMode(ChargeMode.Discharge) });
+                    Menu.Add(new MenuItem() { MenuText = "Batteries off", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.DarkRed, Action = DisableBattery });
+                }
             }
         }
     }

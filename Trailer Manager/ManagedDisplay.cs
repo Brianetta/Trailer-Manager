@@ -46,7 +46,7 @@ namespace IngameScript
                 surface.Script = "";
                 surface.ScriptBackgroundColor = Color.Black;
                 viewport = new RectangleF((surface.TextureSize - surface.SurfaceSize) / 2f, surface.SurfaceSize);
-                WindowSize = (((int)viewport.Height - BodyBeginsHeight - 10) / LineHeight) - 1;
+                WindowSize = (((int)viewport.Height - BodyBeginsHeight - 10) / LineHeight);
             }
 
             public static void FeedbackTick()
@@ -106,9 +106,9 @@ namespace IngameScript
                 });
             }
 
-            private void AddHeading()
+            private void AddHeading(int menuLength)
             {
-                Position = new Vector2(viewport.Width / 2f, StartHeight) + viewport.Position;
+                Position = new Vector2(viewport.Width / 2f - LineHeight, StartHeight) + viewport.Position;
                 frame.Add(new MySprite()
                 {
                     Type = SpriteType.TEXT,
@@ -119,7 +119,27 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER /* Center the text on the position */,
                     FontId = "White"
                 });
-                Position += new Vector2(0, HeadingHeight);
+                Position = new Vector2(viewport.Width - 2*LineHeight, LineHeight) + viewport.Position;
+                frame.Add(new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "AH_BoreSight",
+                    Color = (WindowPosition > 0) ? Color.OrangeRed : Color.Black.Alpha(0),
+                    RotationOrScale = 1.5f * (float)Math.PI,
+                    Size = new Vector2(LineHeight, LineHeight),
+                    Position = Position,
+                });
+                Position += new Vector2(LineHeight, 0);
+                frame.Add(new MySprite()
+                {
+                    Type = SpriteType.TEXTURE,
+                    Data = "AH_BoreSight",
+                    Color = (WindowPosition + WindowSize < menuLength) ? Color.OrangeRed : Color.Black.Alpha(0),
+                    RotationOrScale = 0.5f * (float)Math.PI,
+                    Size = new Vector2(LineHeight, LineHeight),
+                    Position = Position,
+                });
+                Position = new Vector2(viewport.Width / 2f - LineHeight, StartHeight+HeadingHeight) + viewport.Position;
                 frame.Add(new MySprite()
                 {
                     Type = SpriteType.TEXT,
@@ -132,22 +152,7 @@ namespace IngameScript
                 });
             }
 
-            private void AddBackMenu(string name = null)
-            {
-                AddMenuItem(menuText: "Back "+name, sprite: "AH_PullUp", spriteRotation: (float)(1.5f * Math.PI));
-            }
-
-            private void AddAllTrailersMenu(ref MySpriteDrawFrame frame, int trailerCount)
-            {
-                AddMenuItem(menuText: "All Trailers...", textColor: Color.White, sprite: "Textures\\FactionLogo\\Others\\OtherIcon_20.dds", spriteRotation: (float)(0.5f * Math.PI));
-            }
-
-            private void AddTrailerLine(Trailer trailer)
-            {
-                AddMenuItem(menuText: trailer.Name, sprite: "AH_BoreSight");
-            }
-
-            private void AddMenuItem(Program.MenuItem menuItem)
+            private void AddMenuItem(MenuItem menuItem)
             {
                 AddMenuItem(
                     menuText: menuItem.MenuText,
@@ -183,61 +188,20 @@ namespace IngameScript
                 });
             }
 
-            private void AddConfigurationMenu()
-            {
-                AddMenuItem(menuText: "Configuration", sprite: "Construction", textColor: Color.White);
-            }
-            internal void RenderTopMenu(List<Trailer> train, int selectedline, Trailer selectedtrailer)
-            {
-                frame = surface.DrawFrame();
-                CursorMenuPosition = selectedline - WindowPosition;
-                if (CursorMenuPosition < 0)
-                {
-                    CursorMenuPosition = 0;
-                    WindowPosition = selectedline;
-                }
-                if (CursorMenuPosition > WindowSize)
-                {
-                    CursorMenuPosition = WindowSize;
-                    WindowPosition = selectedline - WindowSize;
-                }
-                if (WindowPosition < 0) WindowPosition = 0;
-                CursorDrawPosition = new Vector2(0, BodyBeginsHeight + LineHeight + LineHeight * CursorMenuPosition) + viewport.Position;
-                DrawCursor();
-                AddHeading();
-                Position.X=surface.TextPadding;
-                int renderLineCount = 0;
-                if(WindowPosition==renderLineCount)
-                    AddAllTrailersMenu(ref frame, train.Count);
-                foreach (var trailer in train)
-                {
-                    ++renderLineCount;
-                    if (WindowPosition <= renderLineCount && renderLineCount <= WindowPosition + WindowSize)
-                        AddTrailerLine(trailer);
-                }
-                ++renderLineCount;
-                if (WindowPosition <= renderLineCount && renderLineCount <= WindowPosition+WindowSize)
-                    AddConfigurationMenu();
-                ShowFeedback();
-                frame.Dispose();
-            }
-
-            internal void RenderSubMenu( int selectedline, List<Program.MenuItem> menuItems, MenuOption menuOption)
+            internal void RenderMenu(int selectedline, List<MenuItem> menuItems)
             {
                 SetWindowPosition(selectedline);
                 frame = surface.DrawFrame();
                 CursorDrawPosition = new Vector2(0, BodyBeginsHeight + LineHeight + LineHeight * CursorMenuPosition) + viewport.Position;
                 DrawCursor();
-                AddHeading();
+                AddHeading(menuItems.Count);
                 Position.X = surface.TextPadding;
                 int renderLineCount = 0;
-                if (WindowPosition == renderLineCount)
-                    AddBackMenu();
                 foreach (var menuItem in menuItems)
                 {
-                    ++renderLineCount;
-                    if (WindowPosition <= renderLineCount && renderLineCount <= WindowPosition + WindowSize)
+                    if (renderLineCount >= WindowPosition  && renderLineCount < WindowPosition + WindowSize)
                         AddMenuItem(menuItem);
+                    ++renderLineCount;
                 }
                 ShowFeedback();
                 frame.Dispose();
@@ -251,10 +215,10 @@ namespace IngameScript
                     CursorMenuPosition = 0;
                     WindowPosition = selectedline;
                 }
-                if (CursorMenuPosition > WindowSize)
+                if (CursorMenuPosition >= WindowSize)
                 {
-                    CursorMenuPosition = WindowSize;
-                    WindowPosition = selectedline - WindowSize;
+                    CursorMenuPosition = WindowSize - 1;
+                    WindowPosition = selectedline - (WindowSize - 1);
                 }
             }
         }

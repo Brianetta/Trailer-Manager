@@ -36,11 +36,12 @@ namespace IngameScript
         int selectedline = 0; // Menu selection position
         Trailer selectedtrailer; // Selected trailer in menu (to recalculate selectedline in the event of a rebuild)
         enum MenuOption {Top, AllTrailers, AllBatteries, AllHydrogen, Trailer, Config };
+        enum TimerTask {Menu, Stow, Deploy};
         MenuOption SelectedMenu = MenuOption.Top;
+        List<MenuItem> TopMenu = new List<MenuItem>();
         List<MenuItem> AllTrailersMenu = new List<MenuItem>();
         List<MenuItem> AllBatteriesMenu = new List<MenuItem>();
         List<MenuItem> AllHydrogenMenu = new List<MenuItem>();
-        List<MenuItem> TrailerMenu = new List<MenuItem>();
         List<MenuItem> ConfigurationMenu = new List<MenuItem>();
 
         // Methods for identifying the hydrogen blocks which lack unique interfaces.
@@ -91,17 +92,12 @@ namespace IngameScript
         public void AllTrailersBatteryCharge(ChargeMode chargeMode)
         {
             foreach (var trailer in Consist)
-            {
-
                 trailer.SetBatteryChargeMode(chargeMode);
-            }
         }
         public void AllTrailersDisableBattery()
         {
             foreach (var trailer in Consist)
-            {
                 trailer.DisableBattery();
-            }
         }
         public void AllTrailersHydrogenStockpileOn()
         {
@@ -147,6 +143,16 @@ namespace IngameScript
         {
             foreach (var trailer in Consist)
                 trailer.HandbrakeOff();
+        }
+        public void AllTrailersDeploy()
+        {
+            foreach (var trailer in Consist)
+                trailer.Deploy();
+        }
+        public void AllTrailersStow()
+        {
+            foreach (var trailer in Consist)
+                trailer.Stow();
         }
 
         private void LegacyUpdate()
@@ -245,8 +251,31 @@ namespace IngameScript
                 if (Trailers.ContainsKey(Controller.CubeGrid))
                     Trailers[Controller.CubeGrid].AddController(Controller);
             }
-
-
+            // Find all the timers on a trailer
+            foreach (var Timer in Blocks.OfType<IMyTimerBlock>().ToList())
+            {
+                if (!Trailers.ContainsKey(Timer.CubeGrid))
+                    break;
+                if (MyIni.HasSection(Timer.CustomData,Section) && ini.TryParse(Timer.CustomData))
+                {
+                    switch(ini.Get(Section,"task").ToString())
+                    {
+                        case "stow":
+                        case "pack":
+                            Trailers[Timer.CubeGrid].AddTimer(Timer, TimerTask.Stow);
+                            break;
+                        case "deploy":
+                        case "unpack":
+                            Trailers[Timer.CubeGrid].AddTimer(Timer, TimerTask.Deploy);
+                            break;
+                        default:
+                            Trailers[Timer.CubeGrid].AddTimer(Timer);
+                            break;
+                    }
+                } else
+                    Trailers[Timer.CubeGrid].AddTimer(Timer);
+            }
+           
             GridsFound.Clear();
             Couplings.Clear();
             // Find all grids with hinge parts on them (some of which will be all of the couplings)
@@ -296,7 +325,6 @@ namespace IngameScript
             var trailer = first;
             while (trailer != null)
             {
-                Echo(trailer.Name);
                 Consist.Add(trailer);
                 trailer = trailer.NextTrailer;
             }
@@ -304,37 +332,84 @@ namespace IngameScript
 
         public Program()
         {
-            // BuildConsist populates Blocks, so we run that first.
+            BuildAll();
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
+        }
 
+        private void BuildAll()
+        {
+            // BuildConsist populates Blocks, so we run that first.
             BuildConsist();
             FindDisplays();
             ArrangeTrailersIntoTrain(FirstTrailer);
 
+            BuildTopMenu();
             BuildAllTrailersMenu();
             BuildAllBatteriesMenu();
             BuildAllHydrogenMenu();
+            foreach (var trailer in Consist)
+                trailer.BuildMenu(ActivateTopMenu);
 
-            foreach (var display in Displays)
-            {
-                display.RenderTopMenu(Consist, selectedline, selectedtrailer);
-            }
-
-            Runtime.UpdateFrequency = UpdateFrequency.Update10;
+            RenderTopMenu();
+            ActivateTopMenu();
         }
 
-        public void AllTrailersBatteryMenu()
+        public void ActivateAllBatteriesMenu()
         {
             SelectedMenu = MenuOption.AllBatteries;
             selectedline = 0;
         }
-        public void AllTrailersHydrogenMenu()
+        public void ActivateAllHydrogenMenu()
         {
             SelectedMenu = MenuOption.AllHydrogen;
             selectedline = 0;
         }
+        public void ActivateTopMenu()
+        {
+            if (SelectedMenu == MenuOption.Config)
+                selectedline = TopMenu.Count;
+            else if (SelectedMenu == MenuOption.Trailer)
+                selectedline = Consist.IndexOf(selectedtrailer)+1;
+            else
+                selectedline = 0;
+            SelectedMenu = MenuOption.Top;
+        }
+        public void ActivateAllTrailersMenu()
+        {
+            switch (SelectedMenu)
+            {
+                case MenuOption.AllBatteries:
+                    selectedline = 1;
+                    break;
+                case MenuOption.AllHydrogen:
+                    selectedline = 2;
+                    break;
+                default:
+                    selectedline = 0;
+                    break;
+            }
+            SelectedMenu = MenuOption.AllTrailers;
+        }
+        public void ActivateTrailerMenu()
+        {
+            SelectedMenu = MenuOption.Trailer;
+            selectedtrailer = Consist[selectedline - 1];
+            selectedline = 0;
+        }
+
+        private void BuildTopMenu()
+        {
+            TopMenu.Clear();
+            TopMenu.Add(new MenuItem() { MenuText = "All Trailers...", TextColor = Color.White, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_20.dds", SpriteColor = Color.White, SpriteRotation = (float)(0.5f * Math.PI), Action = ActivateAllTrailersMenu });
+            foreach (var trailer in Consist)
+                TopMenu.Add(new MenuItem() { MenuText = trailer.Name, TextColor = Color.Gray, Sprite = "AH_BoreSight", SpriteColor = Color.White, Action = ActivateTrailerMenu });
+            TopMenu.Add(new MenuItem() { MenuText = "Configuration...", TextColor = Color.White, Sprite = "Construction", SpriteColor = Color.White });
+        }
 
         private void BuildAllBatteriesMenu()
         {
+            AllBatteriesMenu.Clear();
+            AllBatteriesMenu.Add(new MenuItem() { MenuText = "Back", TextColor = Color.Gray, Sprite = "AH_PullUp", SpriteColor = Color.White, SpriteRotation= (float)(1.5f * Math.PI), Action = ActivateAllTrailersMenu });
             AllBatteriesMenu.Add(new MenuItem() { MenuText = "All batteries recharge", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Yellow, Action = () => AllTrailersBatteryCharge(ChargeMode.Recharge) });
             AllBatteriesMenu.Add(new MenuItem() { MenuText = "All batteries auto", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Green, Action = () => AllTrailersBatteryCharge(ChargeMode.Auto) });
             AllBatteriesMenu.Add(new MenuItem() { MenuText = "All batteries discharge", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Cyan, Action = () => AllTrailersBatteryCharge(ChargeMode.Discharge) });
@@ -343,15 +418,21 @@ namespace IngameScript
 
         private void BuildAllTrailersMenu()
         {
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "Batteries...", TextColor = Color.White, SpriteColor = Color.White, Action = AllTrailersBatteryMenu, Sprite = "IconEnergy" });
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "Hydrogen...", TextColor = Color.White, SpriteColor = Color.White, Action = AllTrailersHydrogenMenu, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "De-power wheels", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersWheelsOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
+            AllTrailersMenu.Clear();
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Back", TextColor = Color.Gray, Sprite = "AH_PullUp", SpriteColor = Color.White, SpriteRotation= (float)(1.5f * Math.PI), Action = ActivateTopMenu });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Pack all trailers", Sprite = "Arrow", TextColor = Color.Gray, SpriteColor = Color.YellowGreen, Action = AllTrailersStow });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Batteries...", TextColor = Color.White, SpriteColor = Color.White, Action = ActivateAllBatteriesMenu, Sprite = "IconEnergy" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Hydrogen...", TextColor = Color.White, SpriteColor = Color.White, Action = ActivateAllHydrogenMenu, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Handbrake On", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersHandbrakeOn, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Handbrake Off", TextColor = Color.Gray, SpriteColor = Color.Yellow, Action = AllTrailersHandbrakeOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Unpack all trailers", Sprite = "Arrow", SpriteRotation = (float)Math.PI, TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersDeploy });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "De-power wheels", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersWheelsOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
         }
 
         private void BuildAllHydrogenMenu()
         {
+            AllHydrogenMenu.Clear();
+            AllHydrogenMenu.Add(new MenuItem() { MenuText = "Back", TextColor = Color.Gray, Sprite = "AH_PullUp", SpriteColor = Color.White, SpriteRotation= (float)(1.5f * Math.PI), Action = ActivateAllTrailersMenu });
             AllHydrogenMenu.Add(new MenuItem() { MenuText = "Engines on", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersEnginesOn, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
             AllHydrogenMenu.Add(new MenuItem() { MenuText = "Engines off", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersEnginesOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
             AllHydrogenMenu.Add(new MenuItem() { MenuText = "H Tank Stockpile on", TextColor = Color.Gray, SpriteColor = Color.Cyan, Action = AllTrailersHydrogenStockpileOn, Sprite = "MyObjectBuilder_GasContainerObject/HydrogenBottle" });
@@ -395,41 +476,35 @@ namespace IngameScript
         {
             // The main menu
             foreach (var display in Displays)
-            {
-                display.RenderTopMenu(Consist, selectedline, selectedtrailer);
-            }
+                display.RenderMenu(selectedline, TopMenu);
         }
 
         public void RenderAllTrailersMenu()
         {
             // Menu with functions for all trailers
             foreach (var display in Displays)
-            {
-                display.RenderSubMenu(selectedline, AllTrailersMenu, MenuOption.AllTrailers);
-            }
+                display.RenderMenu(selectedline, AllTrailersMenu);
         }
 
         public void RenderAllBatteriesMenu()
         {
             // Menu with battery charge functions for all trailers
             foreach (var display in Displays)
-            {
-                display.RenderSubMenu(selectedline, AllBatteriesMenu, MenuOption.AllBatteries);
-            }
+                display.RenderMenu(selectedline, AllBatteriesMenu);
         }
 
         public void RenderAllHydrogenMenu()
         {
             // Menu with battery charge functions for all trailers
             foreach (var display in Displays)
-            {
-                display.RenderSubMenu(selectedline, AllHydrogenMenu, MenuOption.AllHydrogen);
-            }
+                display.RenderMenu(selectedline, AllHydrogenMenu);
         }
 
         public void RenderTrailerMenu()
         {
             // Menu specific to a trailer
+            foreach (var display in Displays)
+                display.RenderMenu(selectedline, selectedtrailer.Menu);
         }
 
         public void RenderConfigurationMenu()
@@ -454,72 +529,46 @@ namespace IngameScript
                 switch (argument.ToLower())
                 {
                     case "rebuild":
-                        BuildConsist();
-                        ArrangeTrailersIntoTrain(FirstTrailer);
+                        BuildAll();
                         ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.DarkCyan, TextColor = Color.White, Message = "Rebuilding Train", Sprite = "Screen_LoadingBar", duration = 4 });
                         break;
                     case "up":
-                        if (selectedline > 0) --selectedline;
+                        if (selectedline > 0)
+                            --selectedline;
                         break;
                     case "down":
-                        if (SelectedMenu == MenuOption.Top)
-                            if (selectedline < Consist.Count + 1) ++selectedline;
-                        if (SelectedMenu == MenuOption.AllTrailers)
-                            if (selectedline < AllTrailersMenu.Count) ++selectedline;
-                        if (SelectedMenu == MenuOption.AllBatteries)
-                            if (selectedline < AllBatteriesMenu.Count) ++selectedline;
-                        if (SelectedMenu == MenuOption.AllHydrogen)
-                            if (selectedline < AllHydrogenMenu.Count) ++selectedline;
+                        if (SelectedMenu == MenuOption.Top && selectedline < TopMenu.Count - 1)
+                                ++selectedline;
+                        if (SelectedMenu == MenuOption.AllTrailers && selectedline < AllTrailersMenu.Count - 1)
+                                ++selectedline;
+                        if (SelectedMenu == MenuOption.AllBatteries && selectedline < AllBatteriesMenu.Count - 1)
+                                ++selectedline;
+                        if (SelectedMenu == MenuOption.AllHydrogen && selectedline < AllHydrogenMenu.Count - 1)
+                                ++selectedline; 
+                        if (SelectedMenu == MenuOption.Trailer && selectedline < selectedtrailer.Menu.Count - 1)
+                                ++selectedline;
                         break;
                     case "apply":
                         switch (SelectedMenu)
                         {
                             case MenuOption.Top:
-                                if (selectedline == 0)
-                                    SelectedMenu = MenuOption.AllTrailers;
-                                else if (selectedline > Consist.Count)
-                                    SelectedMenu = MenuOption.Trailer;
-                                else
-                                    selectedtrailer = Consist[selectedline];
-                                selectedline = 0;
+                                TopMenu[selectedline].Action();
                                 break;
                             case MenuOption.AllTrailers:
-                                if (selectedline == 0)
-                                    SelectedMenu = MenuOption.Top;
-                                else
-                                    AllTrailersMenu[selectedline - 1].Action();
+                                AllTrailersMenu[selectedline].Action();
                                 break;
                             case MenuOption.Trailer:
-                                if (selectedline == 0)
-                                {
-                                    SelectedMenu = MenuOption.Top;
-                                    if (Consist.Contains(selectedtrailer))
-                                        selectedline = Consist.IndexOf(selectedtrailer);
-                                }
+                                selectedtrailer.Menu[selectedline].Action();
                                 break;
                             case MenuOption.Config:
-                                selectedline = Consist.Count + 1;
+                                selectedline = Consist.Count + 1;   
                                 SelectedMenu = MenuOption.Top;
                                 break;
                             case MenuOption.AllBatteries:
-                                if (selectedline == 0)
-                                {
-                                    SelectedMenu = MenuOption.AllTrailers;
-                                    selectedline = 1;
-                                } else {
-                                    AllBatteriesMenu[selectedline - 1].Action();
-                                }
+                                AllBatteriesMenu[selectedline].Action();
                                 break;
                             case MenuOption.AllHydrogen:
-                                if (selectedline == 0)
-                                {
-                                    SelectedMenu = MenuOption.AllTrailers;
-                                    selectedline = 2;
-                                }
-                                else
-                                {
-                                    AllHydrogenMenu[selectedline - 1].Action();
-                                }
+                                AllHydrogenMenu[selectedline].Action();
                                 break;
                             default:
                                 selectedline = 0;
