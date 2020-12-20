@@ -63,7 +63,7 @@ namespace IngameScript
 
         public void AllTrailersBatteryCharge(ChargeMode chargeMode)
         {
-            foreach (Trailer trailer in Consist)
+            foreach (var trailer in Consist)
             {
 
                 trailer.SetBatteryChargeMode(chargeMode);
@@ -71,29 +71,29 @@ namespace IngameScript
         }
         public void AllTrailersDisableBattery()
         {
-            foreach (Trailer trailer in Consist)
+            foreach (var trailer in Consist)
             {
                 trailer.DisableBattery();
             }
         }
         public void AllTrailersHydrogenStockpileOn()
         {
-            foreach (Trailer trailer in Consist)
+            foreach (var trailer in Consist)
                 trailer.HydrogenTankStockpileOn();
         }
         public void AllTrailersHydrogenStockpileOff()
         {
-            foreach (Trailer trailer in Consist)
+            foreach (var trailer in Consist)
                 trailer.HydrogenTankStockpileOff();
         }
         public void AllTrailersEnginesOff()
         {
-            foreach (Trailer trailer in Consist)
+            foreach (var trailer in Consist)
                 trailer.EnginesOff();
         }
         public void AllTrailersEnginesOn()
         {
-            foreach (Trailer trailer in Consist)
+            foreach (var trailer in Consist)
                 trailer.EnginesOn();
         }
         public void AllTrailersGasGeneratorsOn()
@@ -236,7 +236,7 @@ namespace IngameScript
                 }
             }
             // ...and connect the trailers to each other
-            foreach (Trailer trailer in Trailers.Values)
+            foreach (var trailer in Trailers.Values)
             {
                 trailer.DetectNextTrailer();
             }
