@@ -131,6 +131,21 @@ namespace IngameScript
             foreach (var trailer in Consist)
                 trailer.GeneratorsOff();
         }
+        public void AllTrailersWheelsOff()
+        {
+            foreach (var trailer in Consist)
+                trailer.WheelsOff();
+        }
+        public void AllTrailersHandbrakeOn()
+        {
+            foreach (var trailer in Consist)
+                trailer.HandbrakeOn();
+        }
+        public void AllTrailersHandbrakeOff()
+        {
+            foreach (var trailer in Consist)
+                trailer.HandbrakeOff();
+        }
 
         private void LegacyUpdate()
         {
@@ -215,12 +230,18 @@ namespace IngameScript
             {
                 if (Trailers.ContainsKey(Tank.CubeGrid) && IsHydrogenTank(Tank))
                     Trailers[Tank.CubeGrid].AddHTank(Tank);
-            }           
+            }
             // Get a list of all the O2/H2 generators in each trailer
             foreach (var Gen in Blocks.OfType<IMyGasGenerator>().ToList())
             {
                 if (Trailers.ContainsKey(Gen.CubeGrid))
                     Trailers[Gen.CubeGrid].AddHGen(Gen);
+            }
+            // Get a controller for the handbrake
+            foreach (var Controller in Blocks.OfType<IMyShipController>().ToList())
+            {
+                if (Trailers.ContainsKey(Controller.CubeGrid))
+                    Trailers[Controller.CubeGrid].AddController(Controller);
             }
 
 
@@ -297,6 +318,9 @@ namespace IngameScript
             AllTrailersMenu.Add(new MenuItem() { MenuText = "H Tank Stockpile off", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersHydrogenStockpileOff, Sprite = "MyObjectBuilder_GasContainerObject/HydrogenBottle" });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Generators on", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersGasGeneratorsOn, Sprite = "MyObjectBuilder_Ore/Ice" });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Generators off", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersGasGeneratorsOff, Sprite = "MyObjectBuilder_Ore/Ice" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "De-power wheels", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersWheelsOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Handbrake On", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersHandbrakeOn, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Handbrake Off", TextColor = Color.Gray, SpriteColor = Color.Yellow, Action = AllTrailersHandbrakeOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
 
             foreach (var display in Displays)
             {

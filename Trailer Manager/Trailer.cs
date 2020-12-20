@@ -21,6 +21,7 @@ namespace IngameScript
             private List<IMyPowerProducer> Engines = new List<IMyPowerProducer>();
             private List<IMyGasTank> HTanks = new List<IMyGasTank>();
             private List<IMyGasGenerator> HGens = new List<IMyGasGenerator>();
+            private IMyShipController controller;
 
             public Trailer(Program program, IMyMotorAdvancedStator forwardHitch)
             {
@@ -63,6 +64,10 @@ namespace IngameScript
             public void AddHGen(IMyGasGenerator generator)
             {
                 HGens.Add(generator );
+            }
+            public void AddController(IMyShipController controller)
+            {
+                this.controller = controller;
             }
 
             public void SetBatteryChargeMode(ChargeMode chargeMode)
@@ -125,6 +130,24 @@ namespace IngameScript
                 foreach (var gen in HGens)
                     gen.Enabled = false;
                 ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Yellow, Message = "Engines Off", Sprite = "MyObjectBuilder_Ore/Ice", duration = 4 });
+            }
+            public void WheelsOff()
+            {
+                foreach (var Wheel in Wheels)
+                    Wheel.Enabled = false;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Blue, Message = "Wheels powered off", Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds", duration = 4 });
+            }
+            public void HandbrakeOn()
+            {
+                if (null != controller)
+                    controller.HandBrake = true;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Green, Message = "Handbrake engaged", Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds", duration = 4 });
+            }
+            public void HandbrakeOff()
+            {
+                if (null != controller)
+                    controller.HandBrake =false;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Yellow, Message = "Handbrake disengaged", Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds", duration = 4 });
             }
 
             public IMyCubeGrid GetGrid()
