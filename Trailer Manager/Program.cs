@@ -35,9 +35,11 @@ namespace IngameScript
         List<ManagedDisplay> Displays = new List<ManagedDisplay>();
         int selectedline = 0; // Menu selection position
         Trailer selectedtrailer; // Selected trailer in menu (to recalculate selectedline in the event of a rebuild)
-        enum MenuOption {Top, AllTrailers, Trailer, Config };
+        enum MenuOption {Top, AllTrailers, AllBatteries, AllHydrogen, Trailer, Config };
         MenuOption SelectedMenu = MenuOption.Top;
         List<MenuItem> AllTrailersMenu = new List<MenuItem>();
+        List<MenuItem> AllBatteriesMenu = new List<MenuItem>();
+        List<MenuItem> AllHydrogenMenu = new List<MenuItem>();
         List<MenuItem> TrailerMenu = new List<MenuItem>();
         List<MenuItem> ConfigurationMenu = new List<MenuItem>();
 
@@ -308,19 +310,9 @@ namespace IngameScript
             FindDisplays();
             ArrangeTrailersIntoTrain(FirstTrailer);
 
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries recharge", TextColor=Color.Gray, Sprite = "IconEnergy",SpriteColor=Color.Yellow, Action = () => AllTrailersBatteryCharge(ChargeMode.Recharge)});
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries auto", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Green, Action = () => AllTrailersBatteryCharge(ChargeMode.Auto)});
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries discharge", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Cyan, Action = () => AllTrailersBatteryCharge(ChargeMode.Discharge)});
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries off", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.DarkRed, Action = AllTrailersDisableBattery });
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "Engines on", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersEnginesOn, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "Engines off", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersEnginesOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "H Tank Stockpile on", TextColor = Color.Gray, SpriteColor = Color.Cyan, Action = AllTrailersHydrogenStockpileOn, Sprite = "MyObjectBuilder_GasContainerObject/HydrogenBottle" });
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "H Tank Stockpile off", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersHydrogenStockpileOff, Sprite = "MyObjectBuilder_GasContainerObject/HydrogenBottle" });
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "Generators on", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersGasGeneratorsOn, Sprite = "MyObjectBuilder_Ore/Ice" });
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "Generators off", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersGasGeneratorsOff, Sprite = "MyObjectBuilder_Ore/Ice" });
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "De-power wheels", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersWheelsOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "Handbrake On", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersHandbrakeOn, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "Handbrake Off", TextColor = Color.Gray, SpriteColor = Color.Yellow, Action = AllTrailersHandbrakeOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
+            BuildAllTrailersMenu();
+            BuildAllBatteriesMenu();
+            BuildAllHydrogenMenu();
 
             foreach (var display in Displays)
             {
@@ -328,6 +320,44 @@ namespace IngameScript
             }
 
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
+        }
+
+        public void AllTrailersBatteryMenu()
+        {
+            SelectedMenu = MenuOption.AllBatteries;
+            selectedline = 0;
+        }
+        public void AllTrailersHydrogenMenu()
+        {
+            SelectedMenu = MenuOption.AllHydrogen;
+            selectedline = 0;
+        }
+
+        private void BuildAllBatteriesMenu()
+        {
+            AllBatteriesMenu.Add(new MenuItem() { MenuText = "All batteries recharge", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Yellow, Action = () => AllTrailersBatteryCharge(ChargeMode.Recharge) });
+            AllBatteriesMenu.Add(new MenuItem() { MenuText = "All batteries auto", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Green, Action = () => AllTrailersBatteryCharge(ChargeMode.Auto) });
+            AllBatteriesMenu.Add(new MenuItem() { MenuText = "All batteries discharge", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Cyan, Action = () => AllTrailersBatteryCharge(ChargeMode.Discharge) });
+            AllBatteriesMenu.Add(new MenuItem() { MenuText = "All batteries off", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.DarkRed, Action = AllTrailersDisableBattery });
+        }
+
+        private void BuildAllTrailersMenu()
+        {
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Batteries...", TextColor = Color.White, SpriteColor = Color.White, Action = AllTrailersBatteryMenu, Sprite = "IconEnergy" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Hydrogen...", TextColor = Color.White, SpriteColor = Color.White, Action = AllTrailersHydrogenMenu, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "De-power wheels", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersWheelsOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Handbrake On", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersHandbrakeOn, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Handbrake Off", TextColor = Color.Gray, SpriteColor = Color.Yellow, Action = AllTrailersHandbrakeOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
+        }
+
+        private void BuildAllHydrogenMenu()
+        {
+            AllHydrogenMenu.Add(new MenuItem() { MenuText = "Engines on", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersEnginesOn, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
+            AllHydrogenMenu.Add(new MenuItem() { MenuText = "Engines off", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersEnginesOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
+            AllHydrogenMenu.Add(new MenuItem() { MenuText = "H Tank Stockpile on", TextColor = Color.Gray, SpriteColor = Color.Cyan, Action = AllTrailersHydrogenStockpileOn, Sprite = "MyObjectBuilder_GasContainerObject/HydrogenBottle" });
+            AllHydrogenMenu.Add(new MenuItem() { MenuText = "H Tank Stockpile off", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersHydrogenStockpileOff, Sprite = "MyObjectBuilder_GasContainerObject/HydrogenBottle" });
+            AllHydrogenMenu.Add(new MenuItem() { MenuText = "Generators on", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersGasGeneratorsOn, Sprite = "MyObjectBuilder_Ore/Ice" });
+            AllHydrogenMenu.Add(new MenuItem() { MenuText = "Generators off", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersGasGeneratorsOff, Sprite = "MyObjectBuilder_Ore/Ice" });
         }
 
         private void FindDisplays()
@@ -375,7 +405,25 @@ namespace IngameScript
             // Menu with functions for all trailers
             foreach (var display in Displays)
             {
-                display.RenderAllTrailersMenu(Consist, selectedline, AllTrailersMenu);
+                display.RenderSubMenu(selectedline, AllTrailersMenu, MenuOption.AllTrailers);
+            }
+        }
+
+        public void RenderAllBatteriesMenu()
+        {
+            // Menu with battery charge functions for all trailers
+            foreach (var display in Displays)
+            {
+                display.RenderSubMenu(selectedline, AllBatteriesMenu, MenuOption.AllBatteries);
+            }
+        }
+
+        public void RenderAllHydrogenMenu()
+        {
+            // Menu with battery charge functions for all trailers
+            foreach (var display in Displays)
+            {
+                display.RenderSubMenu(selectedline, AllHydrogenMenu, MenuOption.AllHydrogen);
             }
         }
 
@@ -418,6 +466,10 @@ namespace IngameScript
                             if (selectedline < Consist.Count + 1) ++selectedline;
                         if (SelectedMenu == MenuOption.AllTrailers)
                             if (selectedline < AllTrailersMenu.Count) ++selectedline;
+                        if (SelectedMenu == MenuOption.AllBatteries)
+                            if (selectedline < AllBatteriesMenu.Count) ++selectedline;
+                        if (SelectedMenu == MenuOption.AllHydrogen)
+                            if (selectedline < AllHydrogenMenu.Count) ++selectedline;
                         break;
                     case "apply":
                         switch (SelectedMenu)
@@ -432,7 +484,6 @@ namespace IngameScript
                                 selectedline = 0;
                                 break;
                             case MenuOption.AllTrailers:
-                                Echo(selectedline.ToString());
                                 if (selectedline == 0)
                                     SelectedMenu = MenuOption.Top;
                                 else
@@ -449,6 +500,26 @@ namespace IngameScript
                             case MenuOption.Config:
                                 selectedline = Consist.Count + 1;
                                 SelectedMenu = MenuOption.Top;
+                                break;
+                            case MenuOption.AllBatteries:
+                                if (selectedline == 0)
+                                {
+                                    SelectedMenu = MenuOption.AllTrailers;
+                                    selectedline = 1;
+                                } else {
+                                    AllBatteriesMenu[selectedline - 1].Action();
+                                }
+                                break;
+                            case MenuOption.AllHydrogen:
+                                if (selectedline == 0)
+                                {
+                                    SelectedMenu = MenuOption.AllTrailers;
+                                    selectedline = 2;
+                                }
+                                else
+                                {
+                                    AllHydrogenMenu[selectedline - 1].Action();
+                                }
                                 break;
                             default:
                                 selectedline = 0;
@@ -473,6 +544,12 @@ namespace IngameScript
                     break;
                 case MenuOption.AllTrailers:
                     RenderAllTrailersMenu();
+                    break;
+                case MenuOption.AllBatteries:
+                    RenderAllBatteriesMenu();
+                    break;
+                case MenuOption.AllHydrogen:
+                    RenderAllHydrogenMenu();
                     break;
                 case MenuOption.Trailer:
                     RenderTrailerMenu();

@@ -37,7 +37,6 @@ namespace IngameScript
             private int WindowSize;         // Number of lines shown on screen at once after heading
             private int WindowPosition = 0; // Number of lines scrolled away
             private int CursorMenuPosition; // Position of cursor within window
-            Program.MenuOption LastSelectedMenu = MenuOption.Top;
             static Program.Feedback Feedback;
 
             public ManagedDisplay(IMyTextSurface surface)
@@ -133,14 +132,14 @@ namespace IngameScript
                 });
             }
 
-            private void AddBackMenu()
+            private void AddBackMenu(string name = null)
             {
-                AddMenuItem(menuText: "Back", sprite: "AH_PullUp", spriteRotation: (float)(1.5f * Math.PI));
+                AddMenuItem(menuText: "Back "+name, sprite: "AH_PullUp", spriteRotation: (float)(1.5f * Math.PI));
             }
 
             private void AddAllTrailersMenu(ref MySpriteDrawFrame frame, int trailerCount)
             {
-                AddMenuItem(menuText: "All Trailers", sprite: "Textures\\FactionLogo\\Others\\OtherIcon_20.dds", spriteRotation: (float)(0.5f * Math.PI));
+                AddMenuItem(menuText: "All Trailers...", textColor: Color.White, sprite: "Textures\\FactionLogo\\Others\\OtherIcon_20.dds", spriteRotation: (float)(0.5f * Math.PI));
             }
 
             private void AddTrailerLine(Trailer trailer)
@@ -190,11 +189,6 @@ namespace IngameScript
             }
             internal void RenderTopMenu(List<Trailer> train, int selectedline, Trailer selectedtrailer)
             {
-                if (LastSelectedMenu != MenuOption.Top)
-                {
-                    WindowPosition = 0;
-                    LastSelectedMenu = MenuOption.Top;
-                }
                 frame = surface.DrawFrame();
                 CursorMenuPosition = selectedline - WindowPosition;
                 if (CursorMenuPosition < 0)
@@ -228,15 +222,9 @@ namespace IngameScript
                 frame.Dispose();
             }
 
-            internal void RenderAllTrailersMenu(List<Trailer> train, int selectedline, List<Program.MenuItem> menuItems)
+            internal void RenderSubMenu( int selectedline, List<Program.MenuItem> menuItems, MenuOption menuOption)
             {
                 SetWindowPosition(selectedline);
-                if (LastSelectedMenu != MenuOption.AllTrailers)
-                {
-                    WindowPosition = 0;
-                    LastSelectedMenu = MenuOption.AllTrailers;
-                    CursorMenuPosition = 0;
-                }
                 frame = surface.DrawFrame();
                 CursorDrawPosition = new Vector2(0, BodyBeginsHeight + LineHeight + LineHeight * CursorMenuPosition) + viewport.Position;
                 DrawCursor();

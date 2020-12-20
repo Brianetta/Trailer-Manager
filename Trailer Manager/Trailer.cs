@@ -123,13 +123,13 @@ namespace IngameScript
             {
                 foreach (var gen in HGens)
                     gen.Enabled = true;
-                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Green, Message = "Engines On", Sprite = "MyObjectBuilder_Ore/Ice", duration = 4 });
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Green, Message = "O2/H2 Gen On", Sprite = "MyObjectBuilder_Ore/Ice", duration = 4 });
             }
             public void GeneratorsOff()
             {
                 foreach (var gen in HGens)
                     gen.Enabled = false;
-                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Yellow, Message = "Engines Off", Sprite = "MyObjectBuilder_Ore/Ice", duration = 4 });
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Yellow, Message = "O2/H2 Gen Off", Sprite = "MyObjectBuilder_Ore/Ice", duration = 4 });
             }
             public void WheelsOff()
             {
