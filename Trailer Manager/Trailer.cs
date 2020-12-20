@@ -3,6 +3,7 @@ using System;
 using VRage.Game.ModAPI.Ingame;
 using System.Collections.Generic;
 using VRage.Game.ModAPI.Ingame.Utilities;
+using VRageMath;
 
 namespace IngameScript
 {
@@ -17,6 +18,9 @@ namespace IngameScript
             private Program program;
             private List<IMyBatteryBlock> Batteries = new List<IMyBatteryBlock>();
             private List<IMyMotorSuspension> Wheels = new List<IMyMotorSuspension>();
+            private List<IMyPowerProducer> Engines = new List<IMyPowerProducer>();
+            private List<IMyGasTank> HTanks = new List<IMyGasTank>();
+            private List<IMyGasGenerator> HGens = new List<IMyGasGenerator>();
 
             public Trailer(Program program, IMyMotorAdvancedStator forwardHitch)
             {
@@ -44,20 +48,36 @@ namespace IngameScript
             {
                 Batteries.Add(battery);
             }
+            public void AddWheel(IMyMotorSuspension wheel)
+            {
+                Wheels.Add(wheel);
+            }
+            public void AddEngine(IMyPowerProducer engine)
+            {
+                Engines.Add(engine);
+            }
+            public void AddHTank(IMyGasTank tank)
+            {
+                HTanks.Add(tank);
+            }
+            public void AddHGen(IMyGasGenerator generator)
+            {
+                HGens.Add(generator );
+            }
 
             public void SetBatteryChargeMode(ChargeMode chargeMode)
             {
                 foreach (var battery in Batteries)
                 {
+                    battery.Enabled = true;
                     battery.ChargeMode = chargeMode;
                 }
-            }
-            public void EnableBattery()
-            {
-                foreach (var battery in Batteries)
-                {
-                    battery.Enabled = true;
-                }
+                Color ChargeColor = Color.Green;
+                if (chargeMode == ChargeMode.Recharge)
+                    ChargeColor = Color.Yellow;
+                if (chargeMode == ChargeMode.Discharge)
+                    ChargeColor = Color.Cyan;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = ChargeColor, Message = chargeMode.ToString(), Sprite = "IconEnergy", duration = 4 });
             }
             public void DisableBattery()
             {
@@ -65,6 +85,46 @@ namespace IngameScript
                 {
                     battery.Enabled = false;
                 }
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.DarkRed, Message = "Batteries off", Sprite = "IconEnergy", duration = 4 });
+            }
+
+            public void HydrogenTankStockpileOn()
+            {
+                foreach (var tank in HTanks)
+                    tank.Stockpile = true;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Cyan, Message = "Stockpile H On", Sprite = "IconHydrogen", duration = 4 });
+            }
+            public void HydrogenTankStockpileOff()
+            {
+                foreach (var tank in HTanks)
+                    tank.Stockpile = false;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Green, Message = "Stockpile H Off", Sprite = "IconHydrogen", duration = 4 });
+            }
+
+            public void EnginesOn()
+            {
+                foreach (var engine in Engines)
+                    engine.Enabled = true;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Green, Message = "Engines On", Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds", duration = 4 });
+            }
+            public void EnginesOff()
+            {
+                foreach (var engine in Engines)
+                    engine.Enabled = false;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Yellow, Message = "Engines Off", Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds", duration = 4 });
+            }
+
+            public void GeneratorsOn()
+            {
+                foreach (var gen in HGens)
+                    gen.Enabled = true;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Green, Message = "Engines On", Sprite = "MyObjectBuilder_Ore/Ice", duration = 4 });
+            }
+            public void GeneratorsOff()
+            {
+                foreach (var gen in HGens)
+                    gen.Enabled = false;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Yellow, Message = "Engines Off", Sprite = "MyObjectBuilder_Ore/Ice", duration = 4 });
             }
 
             public IMyCubeGrid GetGrid()

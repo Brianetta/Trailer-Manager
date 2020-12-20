@@ -27,7 +27,7 @@ namespace IngameScript
         List<IMyAttachableTopBlock> HingeParts = new List<IMyAttachableTopBlock>();
         Dictionary<IMyCubeGrid, Trailer> Trailers = new Dictionary<IMyCubeGrid, Trailer>();
         Dictionary<IMyCubeGrid, Coupling> Couplings = new Dictionary<IMyCubeGrid, Coupling>();
-        List<Trailer> Train = new List<Trailer>();
+        List<Trailer> Consist = new List<Trailer>();
         List<IMyCubeGrid> GridsFound = new List<IMyCubeGrid>();
         const string Section = "trailer";
         MyIni ini = new MyIni();
@@ -51,26 +51,60 @@ namespace IngameScript
             public Action Action;
         }
 
+        struct Feedback
+        {
+            public String Message;
+            public String Sprite;
+            public float SpriteRotation;
+            public Color BackgroundColor;
+            public Color TextColor;
+            public int duration;
+        }
+
         public void AllTrailersBatteryCharge(ChargeMode chargeMode)
         {
-            foreach (Trailer trailer in Train)
+            foreach (Trailer trailer in Consist)
             {
+
                 trailer.SetBatteryChargeMode(chargeMode);
-            }
-        }
-        public void AllTrailersEnableBattery()
-        {
-            foreach (Trailer trailer in Train)
-            {
-                trailer.EnableBattery();
             }
         }
         public void AllTrailersDisableBattery()
         {
-            foreach (Trailer trailer in Train)
+            foreach (Trailer trailer in Consist)
             {
                 trailer.DisableBattery();
             }
+        }
+        public void AllTrailersHydrogenStockpileOn()
+        {
+            foreach (Trailer trailer in Consist)
+                trailer.HydrogenTankStockpileOn();
+        }
+        public void AllTrailersHydrogenStockpileOff()
+        {
+            foreach (Trailer trailer in Consist)
+                trailer.HydrogenTankStockpileOff();
+        }
+        public void AllTrailersEnginesOff()
+        {
+            foreach (Trailer trailer in Consist)
+                trailer.EnginesOff();
+        }
+        public void AllTrailersEnginesOn()
+        {
+            foreach (Trailer trailer in Consist)
+                trailer.EnginesOn();
+        }
+        public void AllTrailersGasGeneratorsOn()
+        {
+            foreach (var trailer in Consist)
+                trailer.GeneratorsOn();
+        }
+        public void AllTrailersGasGeneratorsOff()
+        {
+            foreach (var trailer in Consist)
+                trailer.GeneratorsOff();
         }
 
         private void LegacyUpdate()
@@ -134,10 +168,36 @@ namespace IngameScript
             }
 
             // Get a list of all the batteries in each trailer
-            foreach(var Battery in Blocks.OfType<IMyBatteryBlock>().ToList()) {
+            foreach(var Battery in Blocks.OfType<IMyBatteryBlock>().ToList())
+            {
                 if(Trailers.ContainsKey(Battery.CubeGrid))
                     Trailers[Battery.CubeGrid].AddBattery(Battery);
             }
+            // Get a list of all the wheel suspensions in each trailer
+            foreach (var Wheel in Blocks.OfType<IMyMotorSuspension>().ToList())
+            {
+                if (Trailers.ContainsKey(Wheel.CubeGrid))
+                    Trailers[Wheel.CubeGrid].AddWheel(Wheel);
+            }
+            // Get a list of all the hydrogen engines in each trailer
+            foreach (var Engine in Blocks.OfType<IMyPowerProducer>().ToList())
+            {
+                if (Trailers.ContainsKey(Engine.CubeGrid) && Engine.BlockDefinition.SubtypeName.Contains("Engine"))
+                    Trailers[Engine.CubeGrid].AddEngine(Engine);
+            }
+            // Get a list of all the hydrogen tanks in each trailer
+            foreach (var Tank in Blocks.OfType<IMyGasTank>().ToList())
+            {
+                if (Trailers.ContainsKey(Tank.CubeGrid) && Tank.BlockDefinition.SubtypeName.Contains("Hydro"))
+                    Trailers[Tank.CubeGrid].AddHTank(Tank);
+            }           
+            // Get a list of all the O2/H2 generators in each trailer
+            foreach (var Gen in Blocks.OfType<IMyGasGenerator>().ToList())
+            {
+                if (Trailers.ContainsKey(Gen.CubeGrid))
+                    Trailers[Gen.CubeGrid].AddHGen(Gen);
+            }
+
 
             GridsFound.Clear();
             Couplings.Clear();
@@ -184,12 +244,12 @@ namespace IngameScript
 
         private void ArrangeTrailersIntoTrain(Trailer first)
         {
-            Train.Clear();
+            Consist.Clear();
             var trailer = first;
             while (trailer != null)
             {
                 Echo(trailer.Name);
-                Train.Add(trailer);
+                Consist.Add(trailer);
                 trailer = trailer.NextTrailer;
             }
         }
@@ -202,16 +262,23 @@ namespace IngameScript
             FindDisplays();
             ArrangeTrailersIntoTrain(FirstTrailer);
 
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries recharge", Sprite = "IconEnergy",SpriteColor=Color.Yellow, Action = () => AllTrailersBatteryCharge(ChargeMode.Recharge)});
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries auto", Sprite = "IconEnergy", SpriteColor = Color.Green, Action = () => AllTrailersBatteryCharge(ChargeMode.Auto)});
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries discharge", Sprite = "IconEnergy", SpriteColor = Color.Cyan, Action = () => AllTrailersBatteryCharge(ChargeMode.Discharge)});
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries off", Sprite = "IconEnergy", SpriteColor = Color.DarkRed, Action = AllTrailersDisableBattery });
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries on", Sprite = "IconEnergy", Action = AllTrailersEnableBattery });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries recharge", TextColor=Color.Gray, Sprite = "IconEnergy",SpriteColor=Color.Yellow, Action = () => AllTrailersBatteryCharge(ChargeMode.Recharge)});
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries auto", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Green, Action = () => AllTrailersBatteryCharge(ChargeMode.Auto)});
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries discharge", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Cyan, Action = () => AllTrailersBatteryCharge(ChargeMode.Discharge)});
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "All batteries off", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.DarkRed, Action = AllTrailersDisableBattery });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Engines on", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersEnginesOn, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Engines off", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersEnginesOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "H Tank Stockpile on", TextColor = Color.Gray, SpriteColor = Color.Cyan, Action = AllTrailersHydrogenStockpileOn, Sprite = "MyObjectBuilder_GasContainerObject/HydrogenBottle" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "H Tank Stockpile off", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersHydrogenStockpileOff, Sprite = "MyObjectBuilder_GasContainerObject/HydrogenBottle" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Generators on", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersGasGeneratorsOn, Sprite = "MyObjectBuilder_Ore/Ice" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Generators off", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersGasGeneratorsOff, Sprite = "MyObjectBuilder_Ore/Ice" });
 
             foreach (var display in Displays)
             {
-                display.RenderTopMenu(Train, selectedline, selectedtrailer);
+                display.RenderTopMenu(Consist, selectedline, selectedtrailer);
             }
+
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
         private void FindDisplays()
@@ -229,7 +296,7 @@ namespace IngameScript
                     }
                     else
                     {
-                        Echo("Warning: " + TextSurfaceProvider.CustomName + " doesn't have a display number " + ini.Get(Section, "display").ToUInt16().ToString());
+                        Echo("Warning: " + TextSurfaceProvider.CustomName + " doesn't have a display number " + ini.Get(Section, "display").ToString());
                     }
                 }
             }
@@ -250,7 +317,7 @@ namespace IngameScript
             // The main menu
             foreach (var display in Displays)
             {
-                display.RenderTopMenu(Train, selectedline, selectedtrailer);
+                display.RenderTopMenu(Consist, selectedline, selectedtrailer);
             }
         }
 
@@ -259,7 +326,7 @@ namespace IngameScript
             // Menu with functions for all trailers
             foreach (var display in Displays)
             {
-                display.RenderAllTrailersMenu(Train, selectedline, AllTrailersMenu);
+                display.RenderAllTrailersMenu(Consist, selectedline, AllTrailersMenu);
             }
         }
 
@@ -271,70 +338,83 @@ namespace IngameScript
         public void RenderConfigurationMenu()
         {
             // The config menu
+            foreach (var display in Displays)
+            {
+                //display.RenderConfigurationMenu(Train, selectedline, AllTrailersMenu);
+            }
         }
 
         public void Main(string argument, UpdateType updateSource)
         {
-            if (argument == "LegacyUpdate")
+            if((updateSource & (UpdateType.Terminal | UpdateType.Trigger))!= 0)
             {
-                LegacyUpdate();
-                BuildConsist();
-                ArrangeTrailersIntoTrain(FirstTrailer);
-            }
-            switch (argument.ToLower())
-            {
-                case "rebuild":
+                if (argument == "LegacyUpdate")
+                { 
+                    LegacyUpdate();
                     BuildConsist();
                     ArrangeTrailersIntoTrain(FirstTrailer);
-                    break;
-                case "up":
-                    if (selectedline > 0) --selectedline;
-                    break;
-                case "down":
-                    if (SelectedMenu == MenuOption.Top)
-                        if (selectedline < Train.Count) ++selectedline;
-                    if (SelectedMenu == MenuOption.AllTrailers)
-                        if (selectedline < AllTrailersMenu.Count) ++selectedline;
-                    break;
-                case "apply":
-                    switch (SelectedMenu)
-                    {
-                        case MenuOption.Top:
-                            if (selectedline == 0)
-                                SelectedMenu = MenuOption.AllTrailers;
-                            else if (selectedline > Train.Count)
-                                SelectedMenu = MenuOption.Trailer;
-                            else
-                                selectedtrailer = Train[selectedline];
-                            selectedline = 0;
-                            break;
-                        case MenuOption.AllTrailers:
-                            Echo(selectedline.ToString());
-                            if (selectedline == 0)
+                }
+                switch (argument.ToLower())
+                {
+                    case "rebuild":
+                        BuildConsist();
+                        ArrangeTrailersIntoTrain(FirstTrailer);
+                        ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.DarkCyan, TextColor = Color.White, Message = "Rebuilding Train", Sprite = "Screen_LoadingBar", duration = 4 });
+                        break;
+                    case "up":
+                        if (selectedline > 0) --selectedline;
+                        break;
+                    case "down":
+                        if (SelectedMenu == MenuOption.Top)
+                            if (selectedline < Consist.Count + 1) ++selectedline;
+                        if (SelectedMenu == MenuOption.AllTrailers)
+                            if (selectedline < AllTrailersMenu.Count) ++selectedline;
+                        break;
+                    case "apply":
+                        switch (SelectedMenu)
+                        {
+                            case MenuOption.Top:
+                                if (selectedline == 0)
+                                    SelectedMenu = MenuOption.AllTrailers;
+                                else if (selectedline > Consist.Count)
+                                    SelectedMenu = MenuOption.Trailer;
+                                else
+                                    selectedtrailer = Consist[selectedline];
+                                selectedline = 0;
+                                break;
+                            case MenuOption.AllTrailers:
+                                Echo(selectedline.ToString());
+                                if (selectedline == 0)
+                                    SelectedMenu = MenuOption.Top;
+                                else
+                                    AllTrailersMenu[selectedline - 1].Action();
+                                break;
+                            case MenuOption.Trailer:
+                                if (selectedline == 0)
+                                {
+                                    SelectedMenu = MenuOption.Top;
+                                    if (Consist.Contains(selectedtrailer))
+                                        selectedline = Consist.IndexOf(selectedtrailer);
+                                }
+                                break;
+                            case MenuOption.Config:
+                                selectedline = Consist.Count + 1;
                                 SelectedMenu = MenuOption.Top;
-                            else
-                                AllTrailersMenu[selectedline-1].Action();
-                            break;
-                        case MenuOption.Trailer:
-                            if (selectedline == 0)
-                            {
+                                break;
+                            default:
+                                selectedline = 0;
                                 SelectedMenu = MenuOption.Top;
-                                if (Train.Contains(selectedtrailer))
-                                    selectedline = Train.IndexOf(selectedtrailer);
-                            }
-                            break;
-                        case MenuOption.Config:
-                            selectedline = Train.Count + 1;
-                            SelectedMenu = MenuOption.Top;
-                            break;
-                        default:
-                            selectedline = 0;
-                            SelectedMenu = MenuOption.Top;
-                            break;
+                                break;
                         }
-                    break;
-                default:
-                    break;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            if((updateSource & (UpdateType.Update10))!= 0)
+            {
+                ManagedDisplay.FeedbackTick();
             }
 
             switch (SelectedMenu)
