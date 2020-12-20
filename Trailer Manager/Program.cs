@@ -41,6 +41,31 @@ namespace IngameScript
         List<MenuItem> TrailerMenu = new List<MenuItem>();
         List<MenuItem> ConfigurationMenu = new List<MenuItem>();
 
+        // Methods for identifying the hydrogen blocks which lack unique interfaces.
+        // Many thanks to Vox Serico for these methods.
+
+        readonly MyDefinitionId
+            _hydrogenEngineId = MyDefinitionId.Parse("MyObjectBuilder_HydrogenEngine/"),
+            _hydrogenGasId = MyDefinitionId.Parse("MyObjectBuilder_GasProperties/Hydrogen"),
+            _oxygenTankId = MyDefinitionId.Parse("MyObjectBuilder_OxygenTank/");
+
+        bool IsHydrogenEngine(IMyTerminalBlock block)
+        {
+            return IsHydrogenEngine(block.BlockDefinition);
+        }
+        bool IsHydrogenEngine(MyDefinitionId blockId)
+        {
+            return blockId.TypeId == _hydrogenEngineId.TypeId;
+        }
+        bool IsHydrogenTank(IMyTerminalBlock block)
+        {
+            if (block.BlockDefinition.TypeId != _oxygenTankId.TypeId)
+                return false;
+
+            var resourceSink = block.Components.Get<MyResourceSinkComponent>();
+            return resourceSink == null ? false : resourceSink.AcceptedResources.Contains(_hydrogenGasId);
+        }
+
         struct MenuItem
         {
             public String Sprite;
@@ -182,13 +207,13 @@ namespace IngameScript
             // Get a list of all the hydrogen engines in each trailer
             foreach (var Engine in Blocks.OfType<IMyPowerProducer>().ToList())
             {
-                if (Trailers.ContainsKey(Engine.CubeGrid) && Engine.BlockDefinition.SubtypeName.Contains("Engine"))
+                if (Trailers.ContainsKey(Engine.CubeGrid) && IsHydrogenEngine(Engine))
                     Trailers[Engine.CubeGrid].AddEngine(Engine);
             }
             // Get a list of all the hydrogen tanks in each trailer
             foreach (var Tank in Blocks.OfType<IMyGasTank>().ToList())
             {
-                if (Trailers.ContainsKey(Tank.CubeGrid) && Tank.BlockDefinition.SubtypeName.Contains("Hydro"))
+                if (Trailers.ContainsKey(Tank.CubeGrid) && IsHydrogenTank(Tank))
                     Trailers[Tank.CubeGrid].AddHTank(Tank);
             }           
             // Get a list of all the O2/H2 generators in each trailer
