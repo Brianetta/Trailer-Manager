@@ -38,6 +38,16 @@ namespace IngameScript
                     return A.Base.CubeGrid;
                 return null;
             }
+            public IMyMechanicalConnectionBlock GetOtherHinge(IMyCubeGrid grid)
+            {
+                if (null == B) return null;
+                if (grid.Equals(A.Base.CubeGrid) && B.IsAttached)
+                    return B.Base;
+                if (grid.Equals(B.Base.CubeGrid) && A.IsAttached)
+                    return A.Base;
+                return null;
+            }
+
         }
     }
 }
