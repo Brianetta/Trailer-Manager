@@ -26,27 +26,38 @@ namespace IngameScript
             private IMyTextSurface surface;
             private RectangleF viewport;
             private MySpriteDrawFrame frame;
-            private const int StartHeight = 5;
-            private const int HeadingHeight = 35;
-            private const int LineHeight = 40;
-            private const int BodyBeginsHeight = StartHeight + HeadingHeight + 25;
-            private const float HeadingFontSize = 2.0f;
-            private const float RegularFontSize = 1.5f;
+            private float StartHeight = 5f;
+            private float HeadingHeight = 35f;
+            private float LineHeight = 40f;
+            private float BodyBeginsHeight = 65f; // StartHeight + HeadingHeight + 25;
+            private float HeadingFontSize = 2.0f;
+            private float RegularFontSize = 1.5f;
             private Vector2 Position;
             private Vector2 CursorDrawPosition;
             private int WindowSize;         // Number of lines shown on screen at once after heading
             private int WindowPosition = 0; // Number of lines scrolled away
             private int CursorMenuPosition; // Position of cursor within window
             static Program.Feedback Feedback;
+            private float Scale;
 
-            public ManagedDisplay(IMyTextSurface surface)
+            public ManagedDisplay(IMyTextSurface surface, float scale = 1.0f)
             {
                 this.surface = surface;
+                this.Scale = scale;
+
+                // Scale everything!
+                StartHeight *= scale;
+                HeadingHeight *= scale;
+                LineHeight *= scale;
+                BodyBeginsHeight *= scale;
+                HeadingFontSize *= scale;
+                RegularFontSize *= scale;
+
                 surface.ContentType = ContentType.SCRIPT;
                 surface.Script = "";
                 surface.ScriptBackgroundColor = Color.Black;
                 viewport = new RectangleF((surface.TextureSize - surface.SurfaceSize) / 2f, surface.SurfaceSize);
-                WindowSize = (((int)viewport.Height - BodyBeginsHeight - 10) / LineHeight);
+                WindowSize = ((int)((viewport.Height - BodyBeginsHeight - 10 * scale) / LineHeight));
             }
 
             public static void FeedbackTick()
@@ -165,7 +176,7 @@ namespace IngameScript
 
             private void AddMenuItem(string menuText, string sprite = "SquareSimple", float spriteRotation = 0, Color? spriteColor = null, Color? textColor = null)
             {
-                const float SpriteOffset = 25f;
+                float SpriteOffset = 25f * Scale;
                 Position += new Vector2(0, LineHeight);
                 frame.Add(new MySprite()
                 {

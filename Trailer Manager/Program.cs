@@ -529,7 +529,8 @@ namespace IngameScript
                     if (displayNumber < ((IMyTextSurfaceProvider)TextSurfaceProvider).SurfaceCount)
                     {
                         var display = ((IMyTextSurfaceProvider)TextSurfaceProvider).GetSurface(ini.Get(Section, "display").ToInt16());
-                        Displays.Add(new ManagedDisplay(display));
+                        float scale = ini.Get(Section, "scale").ToSingle(1.0f);
+                        Displays.Add(new ManagedDisplay(display, scale));
                     }
                     else
                     {

@@ -24,9 +24,12 @@ Screen/Cockpit example:
 
 [trailer]
 display=0
+scale=0.5
 
 Change the number to the screen that you wish to use; numbers start at 0, so a
 five-screen cockpit has screens 0, 1, 2, 3 and 4.
+
+Scale is a scaling factor; adjust this if the font size is wrong.
 
 Programmable block example:
 ---------------------------
