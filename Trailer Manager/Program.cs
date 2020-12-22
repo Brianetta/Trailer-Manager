@@ -186,17 +186,29 @@ namespace IngameScript
             List<IMyTimerBlock> Timers = Blocks.OfType<IMyTimerBlock>().ToList();
             foreach (var hinge in Hinges)
             {
-                bool rear = (hinge.CustomName.Contains(" Hinge Rear"));
-                hinge.CustomData = "[" + Section + "]\nrear=" + rear.ToString() + (rear ? "" : "\nname=" + hinge.CubeGrid.CustomName);
-                Echo(hinge.CustomName);
+                if (!MyIni.HasSection(hinge.CustomData, Section))
+                {
+                    if (hinge.CubeGrid == Me.CubeGrid && hinge.CustomName.ToLower().Contains("hitch"))
+                    {
+                        this.TractorHitch = hinge;
+                        hinge.CustomData = "[" + Section + "]\nhitch=true";
+                    }
+                    else
+                    {
+                        bool rear = (hinge.CustomName.ToLower().Contains("rear"));
+                        hinge.CustomData = "[" + Section + "]\nrear=" + rear.ToString() + (rear ? "" : "\nname=" + hinge.CubeGrid.CustomName);
+                    }
+                }
             }
             foreach (var timer in Timers)
             {
-                if (timer.CustomName.Contains(" Pack"))
-                    timer.CustomData = "[" + Section + "]\ntask=stow";
-                if (timer.CustomName.Contains(" Unpack"))
-                    timer.CustomData = "[" + Section + "]\ntask=deploy";
-                Echo(timer.CustomName);
+                if (!MyIni.HasSection(timer.CustomData, Section))
+                {
+                    if (timer.CustomName.ToLower().Contains("unpack"))
+                        timer.CustomData = "[" + Section + "]\ntask=deploy";
+                    else if (timer.CustomName.ToLower().Contains("pack"))
+                        timer.CustomData = "[" + Section + "]\ntask=stow";
+                }
             }
         }
 
@@ -226,17 +238,20 @@ namespace IngameScript
             // Second iteration finds all of the hinges not matched in the first iteration
             foreach (var hinge in Hinges)
             {
-                if ((ini.TryParse(hinge.CustomData) && ini.Get(Section, "hitch").ToBoolean()) || GridsFound.Contains(hinge.CubeGrid))
-                {
-                    Trailers[hinge.CubeGrid].SetRearHitch(hinge);
-                    if (hinge.IsAttached)
-                        HingeParts.Add(hinge.Top);
-                }
-                else if (hinge.CubeGrid.Equals(Me.CubeGrid))
-                {
-                    if (hinge.IsAttached)
-                        HingeParts.Add(hinge.Top);
-                }
+                if (MyIni.HasSection(hinge.CustomData,Section) && ini.TryParse(hinge.CustomData))
+                    if (ini.Get(Section, "rear").ToBoolean() || GridsFound.Contains(hinge.CubeGrid))
+                    {
+                        if(Trailers.ContainsKey(hinge.CubeGrid))
+                            Trailers[hinge.CubeGrid].SetRearHitch(hinge);
+                        if (hinge.IsAttached)
+                            HingeParts.Add(hinge.Top);
+                    }
+                    else if (hinge.CubeGrid.Equals(Me.CubeGrid) && ini.Get(Section, "hitch").ToBoolean())
+                    {
+                        TractorHitch = hinge;
+                        if (hinge.IsAttached)
+                            HingeParts.Add(hinge.Top);
+                    }
             }
 
             foreach(var Trailer in Trailers.Values)
@@ -348,6 +363,10 @@ namespace IngameScript
                     FirstTrailer = Trailers[NextGrid];
                     TractorHitch = (IMyMotorAdvancedStator)coupling.GetOtherHinge(NextGrid);
                     break;
+                } 
+                else if (null != TractorHitch && TractorHitch.IsAttached)
+                {
+                    ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Maroon, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Unsupported Trailer, Try LegacyUpdate" });
                 }
             }
             // ...and connect the trailers to each other
@@ -690,7 +709,9 @@ namespace IngameScript
                 }
             }
             if (Consist.Count > 0 && Consist[Consist.Count - 1].IsCoupled())
-            {
+            {   
+                if (!Consist[Consist.Count - 1].DetectNextTrailer())
+                    LegacyUpdate();
                 BuildAll();
                 ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Green, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Trailer found!" });
             }

@@ -262,7 +262,7 @@ namespace IngameScript
             {
                 foreach (var Weapon in Weapons)
                     Weapon.Enabled = false;
-                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Goldenrod, TextColor = Color.Red, Message = "Weapons Safe", Sprite = "MyObjectBuilder_PhysicalGunObject/PreciseAutomaticRifleItem", duration = 4 });
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.SaddleBrown, TextColor = Color.Red, Message = "Weapons Safe", Sprite = "MyObjectBuilder_PhysicalGunObject/PreciseAutomaticRifleItem", duration = 4 });
             }
 
             public IMyCubeGrid GetGrid()
@@ -278,7 +278,7 @@ namespace IngameScript
                     if (null != RearHitch && RearHitch.IsAttached && coupling.ContainsPart(RearHitch.Top))
                     {
                         NextGrid = coupling.GetOtherGrid(this.Grid);
-                        if (null != NextGrid)
+                        if (null != NextGrid && program.Trailers.ContainsKey(NextGrid))
                         {
                             NextTrailer = program.Trailers[NextGrid];
                             return true;
