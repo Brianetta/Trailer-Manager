@@ -67,16 +67,16 @@ namespace IngameScript
                 return false;
 
             var resourceSink = block.Components.Get<MyResourceSinkComponent>();
-            return resourceSink == null ? false : resourceSink.AcceptedResources.Contains(_hydrogenGasId);
+            return resourceSink != null && resourceSink.AcceptedResources.Contains(_hydrogenGasId);
         }
 
         struct MenuItem
         {
-            public String Sprite;
+            public string Sprite;
             public float SpriteRotation;
             public Color SpriteColor;
             public Color TextColor;
-            public String MenuText;
+            public string MenuText;
             public Action Action;
         }
 
