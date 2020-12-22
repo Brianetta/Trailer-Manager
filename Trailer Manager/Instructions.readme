@@ -55,3 +55,23 @@ The task setting can be "stow" or "pack", in which case it will be used to stow
 a trailer for travel. It can also be set to "deploy" or "unpack", in which case
 it will be used to deploy a travel for separate use in-position. If not set, or
 if set to some other value, it will be treated like any other timer.
+
+Arguments
+---------
+
+brakes on      Apply handbrakes
+brakes off     Release handbrakes
+deploy         Deploy / Unpack trailer at rear
+unpack           "
+detach         Detach the rear-most trailer
+hitch          Couple a new trailer to the rear
+attach           "
+weapons on     Activate turrets
+weapons off    De-activate turrets
+rebuild        Check trailer consist for changes
+LegacyUpdate   Attempt to identify trailers (ISL)
+
+up             Move up one line on screen
+down           Move down one line on screen
+apply          Select current line on screen
+back           Go back one menu screen
