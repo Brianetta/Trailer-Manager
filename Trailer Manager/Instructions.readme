@@ -75,4 +75,5 @@ LegacyUpdate   Attempt to identify trailers (ISL)
 up             Move up one line on screen
 down           Move down one line on screen
 apply          Select current line on screen
+select           "
 back           Go back one menu screen

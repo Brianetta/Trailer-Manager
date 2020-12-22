@@ -564,16 +564,6 @@ namespace IngameScript
             }
         }
 
-        public void Save()
-        {
-            // Called when the program needs to save its state. Use
-            // this method to save your state to the Storage field
-            // or some other means. 
-            // 
-            // This method is optional and can be removed if not
-            // needed.
-        }
-
         public void RenderTopMenu()
         {
             // The main menu
@@ -679,6 +669,7 @@ namespace IngameScript
                             ActivateTopMenu();
                         break;
                     case "apply":
+                    case "select":
                         switch (SelectedMenu)
                         {
                             case MenuOption.Top:
