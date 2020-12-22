@@ -629,6 +629,29 @@ namespace IngameScript
                 }
                 switch (argument.ToLower())
                 {
+                    case "brakes on":
+                        AllTrailersHandbrakeOn();
+                        break;
+                    case "brakes off":
+                        AllTrailersHandbrakeOff();
+                        break;
+                    case "deploy":
+                    case "unpack":
+                        DeployLastTrailer();
+                        break;
+                    case "detach":
+                        DetachLastTrailer();
+                        break;
+                    case "hitch":
+                    case "attach":
+                        AttachLastTrailer();
+                        break;
+                    case "weapons on":
+                        AllTrailersWeaponsLive();
+                        break;
+                    case "weapons off":
+                        AllTrailersWeaponsSafe();
+                        break;
                     case "rebuild":
                         ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.DarkCyan, TextColor = Color.White, Message = "Rebuilding Train", Sprite = "Screen_LoadingBar", duration = 4 });
                         ForceBuildAll();

@@ -40,10 +40,6 @@
 * Timers name "Unpack"
 * Timers named "Pack"
 
-### Tags
-
-* Develop a tag scheme like `[Trailer]` or similar
-
 ### Custom Data
 
 * Put an `.ini` section in the Custom Data of any block to be included
