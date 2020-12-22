@@ -23,9 +23,10 @@ namespace IngameScript
             private List<IMyPowerProducer> Engines = new List<IMyPowerProducer>();
             private List<IMyGasTank> HTanks = new List<IMyGasTank>();
             private List<IMyGasGenerator> HGens = new List<IMyGasGenerator>();
+            private List<IMyTimerBlock> Timers = new List<IMyTimerBlock>();
+            private List<IMyUserControllableGun> Weapons = new List<IMyUserControllableGun>();
             private IMyShipController controller;
             private IMyTimerBlock StowTimer, DeployTimer;
-            private List<IMyTimerBlock> Timers = new List<IMyTimerBlock>();
 
             internal List<MenuItem> Menu = new List<MenuItem>();
 
@@ -54,6 +55,7 @@ namespace IngameScript
                 HTanks.Clear();
                 HGens.Clear();
                 Timers.Clear();
+                Weapons.Clear();
             }
 
             public bool IsCoupled()
@@ -104,6 +106,10 @@ namespace IngameScript
                 else if (task == TimerTask.Deploy)
                     DeployTimer = timer;
                 else Timers.Add(timer);
+            }
+            public void AddWeapon(IMyUserControllableGun Weapon)
+            {
+                Weapons.Add(Weapon);
             }
 
             public void SetBatteryChargeMode(ChargeMode chargeMode)
@@ -244,7 +250,19 @@ namespace IngameScript
                 program.ArrangeTrailersIntoTrain(program.FirstTrailer);
                 program.BuildTopMenu();
                 program.ActivateTopMenu();
-                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.DarkRed, TextColor = Color.Yellow, Message = "Detached", Sprite = "Cross", duration = 4});
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Maroon, TextColor = Color.Yellow, Message = "Detached", Sprite = "Cross", duration = 4});
+            }
+            public void WeaponsLive()
+            {
+                foreach (var Weapon in Weapons)
+                    Weapon.Enabled = true;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Maroon, TextColor = Color.Green, Message = "Weapons Live", Sprite = "MyObjectBuilder_PhysicalGunObject/PreciseAutomaticRifleItem", duration = 4 });
+            }
+            public void WeaponsSafe()
+            {
+                foreach (var Weapon in Weapons)
+                    Weapon.Enabled = false;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Goldenrod, TextColor = Color.Red, Message = "Weapons Safe", Sprite = "MyObjectBuilder_PhysicalGunObject/PreciseAutomaticRifleItem", duration = 4 });
             }
 
             public IMyCubeGrid GetGrid()
@@ -307,6 +325,11 @@ namespace IngameScript
                     {
                         Menu.Add(new MenuItem() { MenuText = Timer.CustomName, TextColor = Color.Gray, SpriteColor = Color.Blue, Action = Timer.Trigger, Sprite = "Textures\\FactionLogo\\Builders\\BuilderIcon_1.dds" });
                     }
+                }
+                if (Weapons.Count > 0)
+                {
+                    Menu.Add(new MenuItem() { MenuText = "Weapons Live", TextColor = Color.Gray, SpriteColor = Color.Green, Action = WeaponsLive, Sprite = "MyObjectBuilder_PhysicalGunObject/PreciseAutomaticRifleItem" });
+                    Menu.Add(new MenuItem() { MenuText = "Weapons Safe", TextColor = Color.Gray, SpriteColor = Color.Red, Action = WeaponsSafe, Sprite = "MyObjectBuilder_PhysicalGunObject/PreciseAutomaticRifleItem" });
                 }
                 if (null != controller)
                 {

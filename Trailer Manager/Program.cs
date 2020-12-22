@@ -168,6 +168,16 @@ namespace IngameScript
             if (Consist.Count > 0)
                 Consist[Consist.Count - 1].Attach();
         }
+        public void AllTrailersWeaponsLive()
+        {
+            foreach (var trailer in Consist)
+                trailer.WeaponsLive();
+        }
+        public void AllTrailersWeaponsSafe()
+        {
+            foreach (var trailer in Consist)
+                trailer.WeaponsSafe();
+        }
 
         private void LegacyUpdate()
         {
@@ -264,6 +274,12 @@ namespace IngameScript
                 if (Trailers.ContainsKey(Gen.CubeGrid))
                     Trailers[Gen.CubeGrid].AddHGen(Gen);
             }
+            // Find all the weapons on a trailer
+            foreach (var Weapon in Blocks.OfType<IMyUserControllableGun>().ToList())
+            {
+                if (Trailers.ContainsKey(Weapon.CubeGrid))
+                    Trailers[Weapon.CubeGrid].AddWeapon(Weapon);
+            } 
             // Get a controller for the handbrake
             foreach (var Controller in Blocks.OfType<IMyShipController>().ToList())
             {
@@ -443,6 +459,8 @@ namespace IngameScript
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Pack all trailers", Sprite = "Arrow", TextColor = Color.Gray, SpriteColor = Color.YellowGreen, Action = AllTrailersStow });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Batteries...", TextColor = Color.White, SpriteColor = Color.White, Action = ActivateAllBatteriesMenu, Sprite = "IconEnergy" });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Hydrogen...", TextColor = Color.White, SpriteColor = Color.White, Action = ActivateAllHydrogenMenu, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Weapons Live", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersWeaponsLive, Sprite = "MyObjectBuilder_PhysicalGunObject/PreciseAutomaticRifleItem" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Weapons Safe", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersWeaponsSafe, Sprite = "MyObjectBuilder_PhysicalGunObject/PreciseAutomaticRifleItem" });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Handbrake On", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersHandbrakeOn, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Handbrake Off", TextColor = Color.Gray, SpriteColor = Color.Yellow, Action = AllTrailersHandbrakeOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Unpack all trailers", Sprite = "Arrow", SpriteColor = Color.Green, SpriteRotation = (float)Math.PI, TextColor = Color.Gray, Action = AllTrailersDeploy });
