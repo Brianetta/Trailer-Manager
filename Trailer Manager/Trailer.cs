@@ -92,7 +92,7 @@ namespace IngameScript
             }
             public void AddHGen(IMyGasGenerator generator)
             {
-                HGens.Add(generator );
+                HGens.Add(generator);
             }
             public void AddController(IMyShipController controller)
             {
@@ -188,7 +188,7 @@ namespace IngameScript
             public void HandbrakeOff()
             {
                 if (null != controller)
-                    controller.HandBrake =false;
+                    controller.HandBrake = false;
                 ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Yellow, Message = "Handbrake disengaged", Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds", duration = 4 });
             }
             public void Deploy()
@@ -201,7 +201,8 @@ namespace IngameScript
                     ForwardHitch.RotorLock = true;
                     // Trigger the timer, which will run in the next frame
                     DeployTimer.Trigger();
-                } else
+                }
+                else
                 {
                     if (null != controller)
                         controller.HandBrake = false;
@@ -226,7 +227,7 @@ namespace IngameScript
                         controller.HandBrake = false;
                     ForwardHitch.RotorLock = false;
                 }
-                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.GreenYellow, Message = "Trailer Stowed", Sprite = "Arrow",SpriteRotation = (float)Math.PI, duration = 4 });
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.GreenYellow, Message = "Trailer Stowed", Sprite = "Arrow", SpriteRotation = (float)Math.PI, duration = 4 });
             }
             public void Detach()
             {
@@ -242,7 +243,9 @@ namespace IngameScript
                 {
                     // I'm being towed by the tractor vehicle
                     program.FirstTrailer = null;
-                } else {
+                }
+                else
+                {
                     // I'm being towed by some trailer, let's find it
                     program.Trailers[program.Couplings[ForwardHitch.TopGrid].GetOtherGrid(Grid)].NextTrailer = null;
                 }
@@ -250,7 +253,7 @@ namespace IngameScript
                 program.ArrangeTrailersIntoTrain(program.FirstTrailer);
                 program.BuildTopMenu();
                 program.ActivateTopMenu();
-                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Maroon, TextColor = Color.Yellow, Message = "Detached", Sprite = "Cross", duration = 4});
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Maroon, TextColor = Color.Yellow, Message = "Detached", Sprite = "Cross", duration = 4 });
             }
             public void WeaponsLive()
             {
@@ -319,9 +322,9 @@ namespace IngameScript
                     Menu.Add(new MenuItem() { MenuText = "Generators on", TextColor = Color.Gray, SpriteColor = Color.Green, Action = GeneratorsOn, Sprite = "MyObjectBuilder_Ore/Ice" });
                     Menu.Add(new MenuItem() { MenuText = "Generators off", TextColor = Color.Gray, SpriteColor = Color.Red, Action = GeneratorsOff, Sprite = "MyObjectBuilder_Ore/Ice" });
                 }
-                if(Timers.Count > 0)
+                if (Timers.Count > 0)
                 {
-                    foreach(var Timer in Timers)
+                    foreach (var Timer in Timers)
                     {
                         Menu.Add(new MenuItem() { MenuText = Timer.CustomName, TextColor = Color.Gray, SpriteColor = Color.Blue, Action = Timer.Trigger, Sprite = "Textures\\FactionLogo\\Builders\\BuilderIcon_1.dds" });
                     }

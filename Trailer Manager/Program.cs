@@ -35,8 +35,8 @@ namespace IngameScript
         List<ManagedDisplay> Displays = new List<ManagedDisplay>();
         int selectedline = 0; // Menu selection position
         Trailer selectedtrailer; // Selected trailer in menu (to recalculate selectedline in the event of a rebuild)
-        enum MenuOption {Top, AllTrailers, AllBatteries, AllHydrogen, Trailer, Config };
-        enum TimerTask {Menu, Stow, Deploy};
+        enum MenuOption { Top, AllTrailers, AllBatteries, AllHydrogen, Trailer, Config };
+        enum TimerTask { Menu, Stow, Deploy };
         MenuOption SelectedMenu = MenuOption.Top;
         List<MenuItem> TopMenu = new List<MenuItem>();
         List<MenuItem> AllTrailersMenu = new List<MenuItem>();
@@ -240,7 +240,7 @@ namespace IngameScript
             foreach (var hinge in Hinges.ToList())
             {
                 // Only the first one found. If there's more than one, that's user error, but unlikely to matter.
-                if (!GridsFound.Contains(hinge.CubeGrid) && ((MyIni.HasSection(hinge.CustomData,Section) && ini.TryParse(hinge.CustomData) && !ini.Get(Section, "rear").ToBoolean())))
+                if (!GridsFound.Contains(hinge.CubeGrid) && ((MyIni.HasSection(hinge.CustomData, Section) && ini.TryParse(hinge.CustomData) && !ini.Get(Section, "rear").ToBoolean())))
                 {
                     GridsFound.Add(hinge.CubeGrid);
                     Trailers.Add(hinge.CubeGrid, new Trailer(this, hinge));
@@ -252,10 +252,10 @@ namespace IngameScript
             // Second iteration finds all of the hinges not matched in the first iteration
             foreach (var hinge in Hinges)
             {
-                if (MyIni.HasSection(hinge.CustomData,Section) && ini.TryParse(hinge.CustomData))
+                if (MyIni.HasSection(hinge.CustomData, Section) && ini.TryParse(hinge.CustomData))
                     if (ini.Get(Section, "rear").ToBoolean() || GridsFound.Contains(hinge.CubeGrid))
                     {
-                        if(Trailers.ContainsKey(hinge.CubeGrid))
+                        if (Trailers.ContainsKey(hinge.CubeGrid))
                             Trailers[hinge.CubeGrid].SetRearHitch(hinge);
                         if (hinge.IsAttached)
                             HingeParts.Add(hinge.Top);
@@ -268,15 +268,15 @@ namespace IngameScript
                     }
             }
 
-            foreach(var Trailer in Trailers.Values)
+            foreach (var Trailer in Trailers.Values)
             {
                 Trailer.ClearLists();
             }
 
             // Get a list of all the batteries in each trailer
-            foreach(var Battery in Blocks.OfType<IMyBatteryBlock>().ToList())
+            foreach (var Battery in Blocks.OfType<IMyBatteryBlock>().ToList())
             {
-                if(Trailers.ContainsKey(Battery.CubeGrid))
+                if (Trailers.ContainsKey(Battery.CubeGrid))
                     Trailers[Battery.CubeGrid].AddBattery(Battery);
             }
             // Get a list of all the wheel suspensions in each trailer
@@ -308,7 +308,7 @@ namespace IngameScript
             {
                 if (Trailers.ContainsKey(Weapon.CubeGrid))
                     Trailers[Weapon.CubeGrid].AddWeapon(Weapon);
-            } 
+            }
             // Get a controller for the handbrake
             foreach (var Controller in Blocks.OfType<IMyShipController>().ToList())
             {
@@ -340,7 +340,7 @@ namespace IngameScript
                     else
                         Trailers[Timer.CubeGrid].AddTimer(Timer);
                 }
-        }
+            }
 
             GridsFound.Clear();
             Couplings.Clear();
@@ -377,7 +377,7 @@ namespace IngameScript
                     FirstTrailer = Trailers[NextGrid];
                     TractorHitch = (IMyMotorAdvancedStator)coupling.GetOtherHinge(NextGrid);
                     break;
-                } 
+                }
                 else if (null != TractorHitch && TractorHitch.IsAttached)
                 {
                     ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Maroon, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Unsupported Trailer, Try LegacyUpdate" });
@@ -418,7 +418,7 @@ namespace IngameScript
             // If an unidentified trailer was found and hasn't been sorted, quit. This
             // isn't a cheap function.
             if (UnidentifiedTrailer) return;
-            
+
             // BuildConsist populates Blocks, so we run that first.
             BuildConsist();
             FindDisplays();
@@ -426,7 +426,7 @@ namespace IngameScript
 
             // Check whether we have something unidentified coupled to the end of our consist
             UnidentifiedTrailer = (Consist.Count > 0 && Consist[Consist.Count - 1].IsCoupled() || Consist.Count == 0 && null != TractorHitch && TractorHitch.IsAttached);
-            
+
             BuildTopMenu();
             BuildAllTrailersMenu();
             BuildAllBatteriesMenu();
@@ -450,9 +450,9 @@ namespace IngameScript
         public void ActivateTopMenu()
         {
             if (SelectedMenu == MenuOption.Config)
-                selectedline = TopMenu.Count-1;
+                selectedline = TopMenu.Count - 1;
             else if (SelectedMenu == MenuOption.Trailer)
-                selectedline = Consist.IndexOf(selectedtrailer)+1;
+                selectedline = Consist.IndexOf(selectedtrailer) + 1;
             else
                 selectedline = 0;
             SelectedMenu = MenuOption.Top;
@@ -497,7 +497,7 @@ namespace IngameScript
         private void BuildAllBatteriesMenu()
         {
             AllBatteriesMenu.Clear();
-            AllBatteriesMenu.Add(new MenuItem() { MenuText = "Back", TextColor = Color.Gray, Sprite = "AH_PullUp", SpriteColor = Color.White, SpriteRotation= (float)(1.5f * Math.PI), Action = ActivateAllTrailersMenu });
+            AllBatteriesMenu.Add(new MenuItem() { MenuText = "Back", TextColor = Color.Gray, Sprite = "AH_PullUp", SpriteColor = Color.White, SpriteRotation = (float)(1.5f * Math.PI), Action = ActivateAllTrailersMenu });
             AllBatteriesMenu.Add(new MenuItem() { MenuText = "All batteries recharge", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Yellow, Action = () => AllTrailersBatteryCharge(ChargeMode.Recharge) });
             AllBatteriesMenu.Add(new MenuItem() { MenuText = "All batteries auto", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Green, Action = () => AllTrailersBatteryCharge(ChargeMode.Auto) });
             AllBatteriesMenu.Add(new MenuItem() { MenuText = "All batteries discharge", TextColor = Color.Gray, Sprite = "IconEnergy", SpriteColor = Color.Cyan, Action = () => AllTrailersBatteryCharge(ChargeMode.Discharge) });
@@ -507,7 +507,7 @@ namespace IngameScript
         private void BuildAllTrailersMenu()
         {
             AllTrailersMenu.Clear();
-            AllTrailersMenu.Add(new MenuItem() { MenuText = "Back", TextColor = Color.Gray, Sprite = "AH_PullUp", SpriteColor = Color.White, SpriteRotation= (float)(1.5f * Math.PI), Action = ActivateTopMenu });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Back", TextColor = Color.Gray, Sprite = "AH_PullUp", SpriteColor = Color.White, SpriteRotation = (float)(1.5f * Math.PI), Action = ActivateTopMenu });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Pack all trailers", Sprite = "Arrow", TextColor = Color.Gray, SpriteColor = Color.YellowGreen, Action = AllTrailersStow });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Unpack rearmost trailer", Sprite = "Arrow", SpriteColor = Color.Green, SpriteRotation = (float)Math.PI, TextColor = Color.Gray, Action = DeployLastTrailer });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Detach rearmost trailer", Sprite = "Cross", SpriteColor = Color.Red, SpriteRotation = (float)Math.PI, TextColor = Color.Gray, Action = DetachLastTrailer });
@@ -525,7 +525,7 @@ namespace IngameScript
         private void BuildAllHydrogenMenu()
         {
             AllHydrogenMenu.Clear();
-            AllHydrogenMenu.Add(new MenuItem() { MenuText = "Back", TextColor = Color.Gray, Sprite = "AH_PullUp", SpriteColor = Color.White, SpriteRotation= (float)(1.5f * Math.PI), Action = ActivateAllTrailersMenu });
+            AllHydrogenMenu.Add(new MenuItem() { MenuText = "Back", TextColor = Color.Gray, Sprite = "AH_PullUp", SpriteColor = Color.White, SpriteRotation = (float)(1.5f * Math.PI), Action = ActivateAllTrailersMenu });
             AllHydrogenMenu.Add(new MenuItem() { MenuText = "Engines on", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersEnginesOn, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
             AllHydrogenMenu.Add(new MenuItem() { MenuText = "Engines off", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersEnginesOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
             AllHydrogenMenu.Add(new MenuItem() { MenuText = "H Tank Stockpile on", TextColor = Color.Gray, SpriteColor = Color.Cyan, Action = AllTrailersHydrogenStockpileOn, Sprite = "MyObjectBuilder_GasContainerObject/HydrogenBottle" });
@@ -619,16 +619,14 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
-            if((updateSource & (UpdateType.Terminal | UpdateType.Trigger))!= 0)
+            if ((updateSource & (UpdateType.Terminal | UpdateType.Trigger)) != 0)
             {
-                if (argument == "LegacyUpdate")
-                { 
-                    LegacyUpdate();
-                    BuildConsist();
-                    ArrangeTrailersIntoTrain(FirstTrailer);
-                }
                 switch (argument.ToLower())
                 {
+                    case "legacyupdate":
+                        LegacyUpdate();
+                        BuildAll();
+                        break;
                     case "brakes on":
                         AllTrailersHandbrakeOn();
                         break;
@@ -662,17 +660,17 @@ namespace IngameScript
                         break;
                     case "down":
                         if (SelectedMenu == MenuOption.Top && selectedline < TopMenu.Count - 1)
-                                ++selectedline;
+                            ++selectedline;
                         if (SelectedMenu == MenuOption.AllTrailers && selectedline < AllTrailersMenu.Count - 1)
-                                ++selectedline;
+                            ++selectedline;
                         if (SelectedMenu == MenuOption.AllBatteries && selectedline < AllBatteriesMenu.Count - 1)
-                                ++selectedline;
+                            ++selectedline;
                         if (SelectedMenu == MenuOption.AllHydrogen && selectedline < AllHydrogenMenu.Count - 1)
-                                ++selectedline; 
+                            ++selectedline;
                         if (SelectedMenu == MenuOption.Trailer && selectedline < selectedtrailer.Menu.Count - 1)
-                                ++selectedline;
-                        if (SelectedMenu == MenuOption.Config && selectedline < ConfigurationMenu.Count -1)
-                                ++selectedline;
+                            ++selectedline;
+                        if (SelectedMenu == MenuOption.Config && selectedline < ConfigurationMenu.Count - 1)
+                            ++selectedline;
                         break;
                     case "back":
                         if (SelectedMenu == MenuOption.AllBatteries || SelectedMenu == MenuOption.AllHydrogen)
@@ -712,7 +710,7 @@ namespace IngameScript
                 }
             }
 
-            if((updateSource & (UpdateType.Update10))!= 0)
+            if ((updateSource & (UpdateType.Update10)) != 0)
             {
                 ManagedDisplay.FeedbackTick();
                 RefreshConsist();
@@ -746,7 +744,7 @@ namespace IngameScript
         private void RefreshConsist()
         {
             // Deal with unexpectedly detached or attached first trailers
-            if(null != TractorHitch)
+            if (null != TractorHitch)
                 if (!TractorHitch.IsAttached && Consist.Count > 0)
                 {
                     // Something was attached and now it isn't
@@ -780,7 +778,7 @@ namespace IngameScript
                 }
             }
             if (Consist.Count > 0 && Consist[Consist.Count - 1].IsCoupled())
-            {   
+            {
                 BuildAll();
                 if (UnidentifiedTrailer)
                     ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Maroon, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Unknown trailer!" });

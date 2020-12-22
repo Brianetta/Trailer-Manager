@@ -81,7 +81,7 @@ namespace IngameScript
                         Position = new Vector2(0, viewport.Y + LineHeight),
                         Color = Feedback.BackgroundColor,
                         Size = new Vector2(viewport.Width, LineHeight * 2)
-                    }); 
+                    });
                     frame.Add(new MySprite()
                     {
                         Type = SpriteType.TEXTURE,
@@ -130,7 +130,7 @@ namespace IngameScript
                     Alignment = TextAlignment.CENTER /* Center the text on the position */,
                     FontId = "White"
                 });
-                Position = new Vector2(viewport.Width - 2*LineHeight, LineHeight) + viewport.Position;
+                Position = new Vector2(viewport.Width - 2 * LineHeight, LineHeight) + viewport.Position;
                 frame.Add(new MySprite()
                 {
                     Type = SpriteType.TEXTURE,
@@ -150,7 +150,7 @@ namespace IngameScript
                     Size = new Vector2(LineHeight, LineHeight),
                     Position = Position,
                 });
-                Position = new Vector2(viewport.Width / 2f - LineHeight, StartHeight+HeadingHeight) + viewport.Position;
+                Position = new Vector2(viewport.Width / 2f - LineHeight, StartHeight + HeadingHeight) + viewport.Position;
                 frame.Add(new MySprite()
                 {
                     Type = SpriteType.TEXT,
@@ -210,7 +210,7 @@ namespace IngameScript
                 int renderLineCount = 0;
                 foreach (var menuItem in menuItems)
                 {
-                    if (renderLineCount >= WindowPosition  && renderLineCount < WindowPosition + WindowSize)
+                    if (renderLineCount >= WindowPosition && renderLineCount < WindowPosition + WindowSize)
                         AddMenuItem(menuItem);
                     ++renderLineCount;
                 }
