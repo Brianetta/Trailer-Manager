@@ -44,6 +44,7 @@ namespace IngameScript
         List<MenuItem> AllHydrogenMenu = new List<MenuItem>();
         List<MenuItem> ConfigurationMenu = new List<MenuItem>();
         IMyMotorAdvancedStator TractorHitch;
+        private bool UnidentifiedTrailer;
 
         // Methods for identifying the hydrogen blocks which lack unique interfaces.
         // Many thanks to Vox Serico for these methods.
@@ -197,6 +198,8 @@ namespace IngameScript
                     {
                         bool rear = (hinge.CustomName.ToLower().Contains("rear"));
                         hinge.CustomData = "[" + Section + "]\nrear=" + rear.ToString() + (rear ? "" : "\nname=" + hinge.CubeGrid.CustomName);
+                        // A new trailer has been identified, allow BuildAll() to run
+                        if (!rear) UnidentifiedTrailer = false;
                     }
                 }
             }
@@ -210,6 +213,7 @@ namespace IngameScript
                         timer.CustomData = "[" + Section + "]\ntask=stow";
                 }
             }
+            BuildAll();
         }
 
         private void BuildConsist()
@@ -393,13 +397,26 @@ namespace IngameScript
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
+        private void ForceBuildAll()
+        {
+            UnidentifiedTrailer = false;
+            BuildAll();
+        }
+
         private void BuildAll()
         {
+            // If an unidentified trailer was found and hasn't been sorted, quit. This
+            // isn't a cheap function.
+            if (UnidentifiedTrailer) return;
+            
             // BuildConsist populates Blocks, so we run that first.
             BuildConsist();
             FindDisplays();
             ArrangeTrailersIntoTrain(FirstTrailer);
 
+            // Check whether we have something unidentified coupled to the end of our consist
+            UnidentifiedTrailer = (Consist.Count > 0 && Consist[Consist.Count - 1].IsCoupled() || Consist.Count == 0 && null != TractorHitch && TractorHitch.IsAttached);
+            
             BuildTopMenu();
             BuildAllTrailersMenu();
             BuildAllBatteriesMenu();
@@ -591,7 +608,7 @@ namespace IngameScript
                 {
                     case "rebuild":
                         ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.DarkCyan, TextColor = Color.White, Message = "Rebuilding Train", Sprite = "Screen_LoadingBar", duration = 4 });
-                        BuildAll();
+                        ForceBuildAll();
                         break;
                     case "up":
                         if (selectedline > 0)
@@ -681,21 +698,28 @@ namespace IngameScript
 
         private void RefreshConsist()
         {
+            // Deal with unexpectedly detached or attached first trailers
             if(null != TractorHitch)
                 if (!TractorHitch.IsAttached && Consist.Count > 0)
                 {
+                    // Something was attached and now it isn't
                     FirstTrailer.Deploy();
                     FirstTrailer = null;
                     Consist.Clear();
                     BuildTopMenu();
                     ActivateTopMenu();
-                    ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Red, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Trailer detached!" });
+                    ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Red, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Trailer detached" });
                 }
                 else if (TractorHitch.IsAttached && Consist.Count == 0)
                 {
+                    // Nothing was attached, but now something is
                     BuildAll();
-                    ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Green, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Trailer found!" });
+                    if (UnidentifiedTrailer)
+                        ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Maroon, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Unknown trailer!" });
+                    else
+                        ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Green, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Trailer found" });
                 }
+            // Deal with unexpectedly detached or attached subsequent trailers
             for (int i = 0; i < Consist.Count - 1; ++i)
             {
                 if (!Consist[i].IsCoupled())
@@ -705,15 +729,16 @@ namespace IngameScript
                     ArrangeTrailersIntoTrain(FirstTrailer);
                     BuildTopMenu();
                     ActivateTopMenu();
-                    ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Red, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Trailer detached!" });
+                    ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Red, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Trailer detached" });
                 }
             }
             if (Consist.Count > 0 && Consist[Consist.Count - 1].IsCoupled())
             {   
-                if (!Consist[Consist.Count - 1].DetectNextTrailer())
-                    LegacyUpdate();
                 BuildAll();
-                ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Green, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Trailer found!" });
+                if (UnidentifiedTrailer)
+                    ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Maroon, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Unknown trailer!" });
+                else
+                    ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Green, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Trailer found" });
             }
         }
     }
