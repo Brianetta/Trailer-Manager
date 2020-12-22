@@ -54,7 +54,8 @@ task=stow
 The task setting can be "stow" or "pack", in which case it will be used to stow
 a trailer for travel. It can also be set to "deploy" or "unpack", in which case
 it will be used to deploy a travel for separate use in-position. If not set, or
-if set to some other value, it will be treated like any other timer.
+if set to some other value, it will be treated like any other timer: its name
+will be shown in the trailer's menu, where it can be triggered.
 
 Arguments
 ---------
