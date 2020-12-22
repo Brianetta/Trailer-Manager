@@ -82,8 +82,8 @@ namespace IngameScript
 
         struct Feedback
         {
-            public String Message;
-            public String Sprite;
+            public string Message;
+            public string Sprite;
             public float SpriteRotation;
             public Color BackgroundColor;
             public Color TextColor;
