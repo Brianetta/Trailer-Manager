@@ -187,31 +187,41 @@ namespace IngameScript
             List<IMyTimerBlock> Timers = Blocks.OfType<IMyTimerBlock>().ToList();
             foreach (var hinge in Hinges)
             {
+                ini.Clear();
+                ini.TryParse(hinge.CustomData);
                 if (!MyIni.HasSection(hinge.CustomData, Section))
                 {
                     if (hinge.CubeGrid == Me.CubeGrid && hinge.CustomName.ToLower().Contains("hitch"))
                     {
                         this.TractorHitch = hinge;
-                        hinge.CustomData = "[" + Section + "]\nhitch=true";
+                        ini.Set(Section, "hitch", true);
                     }
                     else
                     {
                         bool rear = (hinge.CustomName.ToLower().Contains("rear"));
-                        hinge.CustomData = "[" + Section + "]\nrear=" + rear.ToString() + (rear ? "" : "\nname=" + hinge.CubeGrid.CustomName);
-                        // A new trailer has been identified, allow BuildAll() to run
-                        if (!rear) UnidentifiedTrailer = false;
+                        ini.Set(Section, "rear", rear);
+                        // A new trailer has been identified, set a name and allow BuildAll() to run
+                        if (!rear)
+                        {
+                            ini.Set(Section, "name", hinge.CubeGrid.CustomName);
+                            UnidentifiedTrailer = false;
+                        }
                     }
+                    hinge.CustomData = ini.ToString();
                 }
             }
             foreach (var timer in Timers)
             {
+                ini.Clear();
+                ini.TryParse(timer.CustomData);
                 if (!MyIni.HasSection(timer.CustomData, Section))
                 {
                     if (timer.CustomName.ToLower().Contains("unpack"))
-                        timer.CustomData = "[" + Section + "]\ntask=deploy";
+                        ini.Set(Section, "task", "deploy");
                     else if (timer.CustomName.ToLower().Contains("pack"))
-                        timer.CustomData = "[" + Section + "]\ntask=stow";
+                        ini.Set(Section, "task", "stow");
                 }
+                timer.CustomData = ini.ToString();
             }
             BuildAll();
         }
