@@ -14,7 +14,7 @@ name=Trailer Name
 
 At least one hinge must have rear set to "false". This is the hinge at the
 front, by which the trailer is towed. If there is a hinge at the rear, change
-reat to "true" in that hinge's Custom Data.
+rear to "true" in that hinge's Custom Data.
 
 The name of the trailer defaults to the name of the grid, if the name line is
 missing.
