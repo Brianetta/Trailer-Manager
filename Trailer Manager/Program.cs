@@ -702,7 +702,7 @@ namespace IngameScript
             ConfigurationMenu.Clear();
             ConfigurationMenu.Add(new MenuItem() { MenuText = "Back", TextColor = Color.Gray, Sprite = "AH_PullUp", SpriteColor = Color.White, SpriteRotation = (float)(1.5f * Math.PI), Action = ActivateTopMenu });
             ConfigurationMenu.Add(new MenuItem() { MenuText = "Rebuild consist", TextColor = Color.Gray, Sprite = "Textures\\FactionLogo\\Builders\\BuilderIcon_16.dds", SpriteColor = Color.Cyan, Action = ForceBuildAll });
-            ConfigurationMenu.Add(new MenuItem() { MenuText = "Detect trailer", TextColor = Color.Gray, Sprite = "Textures\\FactionLogo\\Builders\\BuilderIcon_1.dds", SpriteColor = Color.OrangeRed, Action = ForceBuildAll });
+            ConfigurationMenu.Add(new MenuItem() { MenuText = "Detect trailer", TextColor = Color.Gray, Sprite = "Textures\\FactionLogo\\Builders\\BuilderIcon_1.dds", SpriteColor = Color.OrangeRed, Action = LegacyUpdate });
         }
 
         private void FindDisplays()
@@ -778,7 +778,6 @@ namespace IngameScript
                 {
                     case "legacyupdate":
                         LegacyUpdate();
-                        BuildAll();
                         break;
                     case "brakes on":
                         AllTrailersHandbrakeOn();
