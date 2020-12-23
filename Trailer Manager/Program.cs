@@ -313,6 +313,12 @@ namespace IngameScript
                 if (Trailers.ContainsKey(Weapon.CubeGrid))
                     Trailers[Weapon.CubeGrid].AddWeapon(Weapon);
             }
+            // Find all the connectors on a trailer
+            foreach (var Connector in Blocks.OfType<IMyShipConnector>().ToList())
+            {
+                if (Trailers.ContainsKey(Connector.CubeGrid))
+                    Trailers[Connector.CubeGrid].AddConnector(Connector);
+            }
             // Get a controller for the handbrake
             foreach (var Controller in Blocks.OfType<IMyShipController>().ToList())
             {
@@ -429,7 +435,7 @@ namespace IngameScript
             ArrangeTrailersIntoTrain(FirstTrailer);
 
             // Check whether we have something unidentified coupled to the end of our consist
-            UnidentifiedTrailer = (Consist.Count > 0 && Consist[Consist.Count - 1].IsCoupled() || Consist.Count == 0 && null != TractorHitch && TractorHitch.IsAttached);
+            UnidentifiedTrailer = (Consist.Count > 0 && Consist[Consist.Count - 1].IsCoupled()) || (Consist.Count == 0 && null != TractorHitch && TractorHitch.IsAttached);
 
             BuildTopMenu();
             BuildAllTrailersMenu();
