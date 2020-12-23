@@ -57,6 +57,7 @@ namespace IngameScript
                 HGens.Clear();
                 Timers.Clear();
                 Weapons.Clear();
+                Connectors.Clear();
             }
 
             public bool IsCoupled()

@@ -46,6 +46,33 @@ namespace IngameScript
         IMyMotorAdvancedStator TractorHitch;
         private bool UnidentifiedTrailer;
 
+        // Lists used for the mirror feature
+        private List<IMyBatteryBlock> Batteries = new List<IMyBatteryBlock>();
+        private List<IMyPowerProducer> Engines = new List<IMyPowerProducer>();
+        private List<IMyGasTank> HTanks = new List<IMyGasTank>();
+        private List<IMyGasGenerator> HGens = new List<IMyGasGenerator>();
+        private List<IMyUserControllableGun> Weapons = new List<IMyUserControllableGun>();
+        private IMyShipController Controller;
+
+        // Previous states for mirror feature (prevents continually applying changes)
+        ChargeMode PreviousChargeMode = ChargeMode.Auto;
+        bool PreviousBatteryEnabled = true;
+        bool PreviousStockpile = false;
+        bool PreviousGenerator = true;
+        bool PreviousEngines = true;
+        bool PreviousWeapons = false;
+        bool PreviousHandbrake = false;
+
+        public void ClearMirrorLists()
+        {
+            Batteries.Clear();
+            Engines.Clear();
+            HTanks.Clear();
+            HGens.Clear();
+            Weapons.Clear();
+            Controller = null;
+        }
+
         // Methods for identifying the hydrogen blocks which lack unique interfaces.
         // Many thanks to Vox Serico for these methods.
 
@@ -184,6 +211,116 @@ namespace IngameScript
                 trailer.WeaponsSafe();
         }
 
+        public bool? StateToMirror(IEnumerable<IMyFunctionalBlock> blocks)
+        {
+            bool? ReturnState = null;
+            foreach (var block in blocks)
+            {
+                if (null == ReturnState)
+                    ReturnState = block.Enabled;
+                if (block.Enabled != ReturnState.Value)
+                    return null;
+            }
+            return ReturnState;
+        }
+
+        public ChargeMode? ChargeToMirror(IEnumerable<IMyBatteryBlock> batteries)
+        {
+            ChargeMode? ReturnState = null;
+            foreach (var battery in batteries)
+            {
+                if (null == ReturnState)
+                    ReturnState = battery.ChargeMode;
+                if (battery.ChargeMode != ReturnState)
+                    return null;
+            }
+            return ReturnState;
+        }
+
+        public bool? StockpileToMirror(IEnumerable<IMyGasTank> tanks)
+        {
+            bool? ReturnState = null;
+            foreach (var tank in tanks)
+            {
+                if (null == ReturnState)
+                    ReturnState = tank.Stockpile;
+                if (tank.Stockpile != ReturnState)
+                    return null;
+            }
+            return ReturnState;
+        }
+
+        public void Mirror()
+        {
+            bool? enabledState = null;
+            ChargeMode? chargeMode = null;
+            enabledState = StateToMirror(Batteries);
+            if (enabledState.HasValue)
+            {
+                if (!enabledState.Value && PreviousBatteryEnabled)
+                {
+                    AllTrailersDisableBattery();
+                }
+                chargeMode = ChargeToMirror(Batteries);
+                if ((enabledState.Value && !PreviousBatteryEnabled) || (chargeMode.HasValue && chargeMode != PreviousChargeMode))
+                {
+                    AllTrailersBatteryCharge(chargeMode.Value);
+                    PreviousChargeMode = chargeMode.Value;
+                }
+                PreviousBatteryEnabled = enabledState.Value;
+            }
+            enabledState = StateToMirror(Weapons);
+            if (enabledState.HasValue)
+            {
+                if (enabledState.Value != PreviousWeapons)
+                    if (enabledState.Value)
+                        AllTrailersWeaponsLive();
+                    else
+                        AllTrailersWeaponsSafe();
+                PreviousWeapons = enabledState.Value;
+            }
+            enabledState = StateToMirror(Engines);
+            if (enabledState.HasValue)
+            {
+                if (enabledState.Value != PreviousEngines)
+                    if (enabledState.Value)
+                        AllTrailersEnginesOn();
+                    else
+                        AllTrailersEnginesOff();
+                PreviousEngines = enabledState.Value;
+            }
+            enabledState = StateToMirror(HGens);
+            if (enabledState.HasValue)
+            {
+                if (enabledState.Value != PreviousGenerator)
+                    if (enabledState.Value)
+                        AllTrailersGasGeneratorsOn();
+                    else
+                        AllTrailersGasGeneratorsOff();
+                PreviousGenerator = enabledState.Value;
+            }
+            enabledState = StockpileToMirror(HTanks);
+            if (enabledState.HasValue)
+            {
+                if (enabledState.Value != PreviousStockpile)
+                    if (enabledState.Value)
+                        AllTrailersHydrogenStockpileOn();
+                    else
+                        AllTrailersHydrogenStockpileOff();
+                PreviousStockpile = enabledState.Value;
+            }
+            if (Controller.HandBrake && !PreviousHandbrake)
+            {
+                AllTrailersHandbrakeOn();
+                PreviousHandbrake = true;
+            }
+            else if (!Controller.HandBrake && PreviousHandbrake)
+            {
+                AllTrailersHandbrakeOff();
+                PreviousHandbrake = false;
+            }
+        }
+
         private void LegacyUpdate()
         {
             GridTerminalSystem.GetBlocksOfType(Blocks, block => block.IsSameConstructAs(Me) && ((block is IMyMotorAdvancedStator) || (block is IMyTimerBlock)));
@@ -239,6 +376,7 @@ namespace IngameScript
             Hinges = Blocks.OfType<IMyMotorAdvancedStator>().ToList();
             GridsFound.Clear();
             HingeParts.Clear();
+            ClearMirrorLists();
             FirstTrailer = null;
             // First iteration finds front hinges (by name) and creates the Trailer instances for them
             foreach (var hinge in Hinges.ToList())
@@ -280,37 +418,49 @@ namespace IngameScript
             // Get a list of all the batteries in each trailer
             foreach (var Battery in Blocks.OfType<IMyBatteryBlock>().ToList())
             {
-                if (Trailers.ContainsKey(Battery.CubeGrid))
+                if (Me.CubeGrid == Battery.CubeGrid)
+                    Batteries.Add(Battery);
+                else if (Trailers.ContainsKey(Battery.CubeGrid))
                     Trailers[Battery.CubeGrid].AddBattery(Battery);
             }
             // Get a list of all the wheel suspensions in each trailer
             foreach (var Wheel in Blocks.OfType<IMyMotorSuspension>().ToList())
             {
-                if (Trailers.ContainsKey(Wheel.CubeGrid))
+                if(Trailers.ContainsKey(Wheel.CubeGrid))
                     Trailers[Wheel.CubeGrid].AddWheel(Wheel);
             }
             // Get a list of all the hydrogen engines in each trailer
             foreach (var Engine in Blocks.OfType<IMyPowerProducer>().ToList())
             {
-                if (Trailers.ContainsKey(Engine.CubeGrid) && IsHydrogenEngine(Engine))
-                    Trailers[Engine.CubeGrid].AddEngine(Engine);
+                if (IsHydrogenEngine(Engine))
+                    if (Me.CubeGrid == Engine.CubeGrid)
+                        Engines.Add(Engine);
+                    else if (Trailers.ContainsKey(Engine.CubeGrid))
+                        Trailers[Engine.CubeGrid].AddEngine(Engine);
             }
             // Get a list of all the hydrogen tanks in each trailer
             foreach (var Tank in Blocks.OfType<IMyGasTank>().ToList())
             {
-                if (Trailers.ContainsKey(Tank.CubeGrid) && IsHydrogenTank(Tank))
-                    Trailers[Tank.CubeGrid].AddHTank(Tank);
+                if (IsHydrogenTank(Tank))
+                    if (Me.CubeGrid == Tank.CubeGrid)
+                        HTanks.Add(Tank);
+                    else if (Trailers.ContainsKey(Tank.CubeGrid))
+                        Trailers[Tank.CubeGrid].AddHTank(Tank);
             }
             // Get a list of all the O2/H2 generators in each trailer
             foreach (var Gen in Blocks.OfType<IMyGasGenerator>().ToList())
             {
-                if (Trailers.ContainsKey(Gen.CubeGrid))
+                if (Me.CubeGrid == Gen.CubeGrid)
+                    HGens.Add(Gen);
+                else if (Trailers.ContainsKey(Gen.CubeGrid))
                     Trailers[Gen.CubeGrid].AddHGen(Gen);
             }
             // Find all the weapons on a trailer
             foreach (var Weapon in Blocks.OfType<IMyUserControllableGun>().ToList())
             {
-                if (Trailers.ContainsKey(Weapon.CubeGrid))
+                if (Me.CubeGrid == Weapon.CubeGrid)
+                    Weapons.Add(Weapon);
+                else if (Trailers.ContainsKey(Weapon.CubeGrid))
                     Trailers[Weapon.CubeGrid].AddWeapon(Weapon);
             }
             // Find all the connectors on a trailer
@@ -322,6 +472,8 @@ namespace IngameScript
             // Get a controller for the handbrake
             foreach (var Controller in Blocks.OfType<IMyShipController>().ToList())
             {
+                if (Me.CubeGrid == Controller.CubeGrid)
+                    this.Controller = Controller; 
                 if (Trailers.ContainsKey(Controller.CubeGrid))
                     Trailers[Controller.CubeGrid].AddController(Controller);
             }
@@ -790,6 +942,8 @@ namespace IngameScript
                 else
                     ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Green, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Trailer found" });
             }
+            // Mirror vehicle state in trailers
+            Mirror();
         }
     }
 }
