@@ -321,7 +321,7 @@ namespace IngameScript
             }
         }
 
-        private void LegacyUpdate()
+        public void LegacyUpdate()
         {
             GridTerminalSystem.GetBlocksOfType(Blocks, block => block.IsSameConstructAs(Me) && ((block is IMyMotorAdvancedStator) || (block is IMyTimerBlock)));
             Hinges = Blocks.OfType<IMyMotorAdvancedStator>().ToList();
@@ -337,12 +337,16 @@ namespace IngameScript
                         this.TractorHitch = hinge;
                         ini.Set(Section, "hitch", true);
                     }
+                    else if (hinge.CustomName.Contains("Solar")){
+                        // Definitely want to ignore these guys
+                        ;
+                    }
                     else
                     {
-                        bool rear = (hinge.CustomName.ToLower().Contains("rear"));
-                        ini.Set(Section, "rear", rear);
+                        bool front = (hinge.CustomName.ToLower().EndsWith("front"));
+                        ini.Set(Section, "front", front);
                         // A new trailer has been identified, set a name and allow BuildAll() to run
-                        if (!rear)
+                        if (front)
                         {
                             ini.Set(Section, "name", hinge.CubeGrid.CustomName);
                             UnidentifiedTrailer = false;
@@ -382,7 +386,7 @@ namespace IngameScript
             foreach (var hinge in Hinges.ToList())
             {
                 // Only the first one found. If there's more than one, that's user error, but unlikely to matter.
-                if (!GridsFound.Contains(hinge.CubeGrid) && ((MyIni.HasSection(hinge.CustomData, Section) && ini.TryParse(hinge.CustomData) && !ini.Get(Section, "rear").ToBoolean())))
+                if (!GridsFound.Contains(hinge.CubeGrid) && ((MyIni.HasSection(hinge.CustomData, Section) && ini.TryParse(hinge.CustomData) && ini.Get(Section, "front").ToBoolean())))
                 {
                     GridsFound.Add(hinge.CubeGrid);
                     Trailers.Add(hinge.CubeGrid, new Trailer(this, hinge));
@@ -395,7 +399,7 @@ namespace IngameScript
             foreach (var hinge in Hinges)
             {
                 if (MyIni.HasSection(hinge.CustomData, Section) && ini.TryParse(hinge.CustomData))
-                    if (ini.Get(Section, "rear").ToBoolean() || GridsFound.Contains(hinge.CubeGrid))
+                    if (!ini.Get(Section, "front").ToBoolean() || GridsFound.Contains(hinge.CubeGrid))
                     {
                         if (Trailers.ContainsKey(hinge.CubeGrid))
                             Trailers[hinge.CubeGrid].SetRearHitch(hinge);

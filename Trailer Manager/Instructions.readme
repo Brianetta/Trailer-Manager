@@ -9,12 +9,12 @@ Hinge example:
 --------------
 
 [trailer]
-rear=false
+front=true
 name=Trailer Name
 
-At least one hinge must have rear set to "false". This is the hinge at the
+At least one hinge must have front set to "true". This is the hinge at the
 front, by which the trailer is towed. If there is a hinge at the rear, change
-rear to "true" in that hinge's Custom Data.
+front to "false" in that hinge's Custom Data.
 
 The name of the trailer defaults to the name of the grid, if the name line is
 missing.
