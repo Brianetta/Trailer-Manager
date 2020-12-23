@@ -67,6 +67,7 @@ unpack           "
 detach         Detach the rear-most trailer
 hitch          Couple a new trailer to the rear
 attach           "
+connector      Switch connectors on rear trailer
 weapons on     Activate turrets
 weapons off    De-activate turrets
 rebuild        Check trailer consist for changes

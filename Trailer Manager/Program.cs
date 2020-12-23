@@ -160,6 +160,10 @@ namespace IngameScript
         {
             if (Consist.Count > 0) Consist[Consist.Count - 1].Deploy();
         }
+        public void SwitchRearConnector()
+        {
+            if (Consist.Count > 0) Consist[Consist.Count - 1].SwitchConnector();
+        }
         public void DetachLastTrailer()
         {
             if (Consist.Count > 0) Consist[Consist.Count - 1].Detach();
@@ -517,6 +521,7 @@ namespace IngameScript
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Hydrogen...", TextColor = Color.White, SpriteColor = Color.White, Action = ActivateAllHydrogenMenu, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_27.dds" });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Weapons Live", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AllTrailersWeaponsLive, Sprite = "MyObjectBuilder_PhysicalGunObject/PreciseAutomaticRifleItem" });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Weapons Safe", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersWeaponsSafe, Sprite = "MyObjectBuilder_PhysicalGunObject/PreciseAutomaticRifleItem" });
+            AllTrailersMenu.Add(new MenuItem() { MenuText = "Switch Rear Connector", TextColor = Color.Gray, SpriteColor = Color.Yellow, Action = SwitchRearConnector, Sprite = "CircleHollow" });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Unpack all trailers", Sprite = "Arrow", SpriteColor = Color.Green, SpriteRotation = (float)Math.PI, TextColor = Color.Gray, Action = AllTrailersDeploy });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "Attach another trailer", Sprite = "Textures\\FactionLogo\\Traders\\TraderIcon_2.dds", TextColor = Color.Gray, SpriteColor = Color.YellowGreen, Action = AttachLastTrailer });
             AllTrailersMenu.Add(new MenuItem() { MenuText = "De-power wheels", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AllTrailersWheelsOff, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_22.dds" });
@@ -633,6 +638,9 @@ namespace IngameScript
                     case "hitch":
                     case "attach":
                         AttachLastTrailer();
+                        break;
+                    case "connector":
+                        SwitchRearConnector();
                         break;
                     case "weapons on":
                         AllTrailersWeaponsLive();

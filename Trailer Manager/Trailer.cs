@@ -25,6 +25,7 @@ namespace IngameScript
             private List<IMyGasGenerator> HGens = new List<IMyGasGenerator>();
             private List<IMyTimerBlock> Timers = new List<IMyTimerBlock>();
             private List<IMyUserControllableGun> Weapons = new List<IMyUserControllableGun>();
+            private List<IMyShipConnector> Connectors = new List<IMyShipConnector>();
             private IMyShipController controller;
             private IMyTimerBlock StowTimer, DeployTimer;
 
@@ -110,6 +111,10 @@ namespace IngameScript
             public void AddWeapon(IMyUserControllableGun Weapon)
             {
                 Weapons.Add(Weapon);
+            }
+            public void AddConnector(IMyShipConnector connector)
+            {
+                Connectors.Add(connector);
             }
 
             public void SetBatteryChargeMode(ChargeMode chargeMode)
@@ -267,6 +272,12 @@ namespace IngameScript
                     Weapon.Enabled = false;
                 ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.SaddleBrown, TextColor = Color.Red, Message = "Weapons Safe", Sprite = "MyObjectBuilder_PhysicalGunObject/PreciseAutomaticRifleItem", duration = 4 });
             }
+            public void SwitchConnector()
+            {
+                foreach (var Connector in Connectors)
+                    Connector.ToggleConnect();
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Yellow, Message = "Switch Connector", Sprite = "CircleHollow", duration = 4 });
+            }
 
             public IMyCubeGrid GetGrid()
             {
@@ -321,6 +332,10 @@ namespace IngameScript
                 {
                     Menu.Add(new MenuItem() { MenuText = "Generators on", TextColor = Color.Gray, SpriteColor = Color.Green, Action = GeneratorsOn, Sprite = "MyObjectBuilder_Ore/Ice" });
                     Menu.Add(new MenuItem() { MenuText = "Generators off", TextColor = Color.Gray, SpriteColor = Color.Red, Action = GeneratorsOff, Sprite = "MyObjectBuilder_Ore/Ice" });
+                }
+                if (Connectors.Count>0)
+                {
+                    Menu.Add(new MenuItem() { MenuText = "Switch Connector(s)", TextColor = Color.Gray, SpriteColor = Color.Yellow, Action = SwitchConnector, Sprite = "CircleHollow" });
                 }
                 if (Timers.Count > 0)
                 {
