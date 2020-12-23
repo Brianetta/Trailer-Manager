@@ -476,10 +476,11 @@ namespace IngameScript
             // Get a controller for the handbrake
             foreach (var Controller in Blocks.OfType<IMyShipController>().ToList())
             {
-                if (Me.CubeGrid == Controller.CubeGrid)
-                    this.Controller = Controller; 
-                if (Trailers.ContainsKey(Controller.CubeGrid))
-                    Trailers[Controller.CubeGrid].AddController(Controller);
+                if (Controller.CanControlShip)
+                    if (Me.CubeGrid == Controller.CubeGrid)
+                        this.Controller = Controller;
+                    else if (Trailers.ContainsKey(Controller.CubeGrid))
+                        Trailers[Controller.CubeGrid].AddController(Controller);
             }
             // Find all the timers on a trailer
             foreach (var Timer in Blocks.OfType<IMyTimerBlock>().ToList())
@@ -544,10 +545,10 @@ namespace IngameScript
                     TractorHitch = (IMyMotorAdvancedStator)coupling.GetOtherHinge(NextGrid);
                     break;
                 }
-                else if (null != TractorHitch && TractorHitch.IsAttached)
-                {
-                    ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Maroon, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Unsupported Trailer, Try LegacyUpdate" });
-                }
+            }
+            if (null == FirstTrailer && null != TractorHitch && TractorHitch.IsAttached)
+            {
+                ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Maroon, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Unsupported Trailer" });
             }
             // ...and connect the trailers to each other
             foreach (var trailer in Trailers.Values)

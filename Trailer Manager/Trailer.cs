@@ -203,16 +203,16 @@ namespace IngameScript
                 {
                     // Put handbrakes and rotor lock on, assuming that the Timer will toggle these
                     if (null != controller)
-                        controller.HandBrake = true;
-                    ForwardHitch.RotorLock = true;
+                        controller.HandBrake = false;
+                    ForwardHitch.RotorLock = false;
                     // Trigger the timer, which will run in the next frame
                     DeployTimer.Trigger();
                 }
                 else
                 {
                     if (null != controller)
-                        controller.HandBrake = false;
-                    ForwardHitch.RotorLock = false;
+                        controller.HandBrake = true;
+                    ForwardHitch.RotorLock = true;
                 }
                 ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Yellow, Message = "Trailer Deployed", Sprite = "Arrow", duration = 4 });
             }
