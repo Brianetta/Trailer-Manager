@@ -57,6 +57,9 @@ it will be used to deploy a travel for separate use in-position. If not set, or
 if set to some other value, it will be treated like any other timer: its name
 will be shown in the trailer's menu, where it can be triggered.
 
+If you have a timer that is used to both deploy and stow a trailer, set task to
+"toggle".
+
 Arguments
 ---------
 
