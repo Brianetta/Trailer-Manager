@@ -548,8 +548,8 @@ namespace IngameScript
             foreach (var coupling in Couplings.Values)
             {
                 NextGrid = coupling.GetOtherGrid(Me.CubeGrid);
-                if (null != NextGrid)
-                {
+                if (null != NextGrid && Trailers.ContainsKey(NextGrid))
+                    {
                     FirstTrailer = Trailers[NextGrid];
                     TractorHitch = (IMyMotorAdvancedStator)coupling.GetOtherHinge(NextGrid);
                     break;
