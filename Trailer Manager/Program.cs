@@ -46,6 +46,10 @@ namespace IngameScript
         IMyMotorAdvancedStator TractorHitch;
         private bool UnidentifiedTrailer;
 
+        // Config settings
+        internal bool CfgAutoDeploy = true;
+        internal bool CfgMirror = true;
+
         // Lists used for the mirror feature
         private List<IMyBatteryBlock> Batteries = new List<IMyBatteryBlock>();
         private List<IMyPowerProducer> Engines = new List<IMyPowerProducer>();
@@ -568,8 +572,26 @@ namespace IngameScript
             }
         }
 
+        private void ReadConfig()
+        {
+            ini.Clear();
+            ini.TryParse(Me.CustomData);
+            CfgAutoDeploy = ini.Get(Section,"autodeploy").ToBoolean();
+            CfgMirror = ini.Get(Section,"mirror").ToBoolean();
+        }
+
+        private void WriteConfig()
+        {
+            ini.Clear();
+            ini.TryParse(Me.CustomData);
+            ini.Set(Section, "autodeploy", CfgAutoDeploy);
+            ini.Set(Section, "mirror", CfgMirror);
+            Me.CustomData = ini.ToString();
+        }
+
         public Program()
         {
+            ReadConfig();
             BuildAll();
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
@@ -577,6 +599,7 @@ namespace IngameScript
         private void ForceBuildAll()
         {
             UnidentifiedTrailer = false;
+            ReadConfig();
             BuildAll();
         }
 
@@ -706,8 +729,24 @@ namespace IngameScript
         {
             ConfigurationMenu.Clear();
             ConfigurationMenu.Add(new MenuItem() { MenuText = "Back", TextColor = Color.Gray, Sprite = "AH_PullUp", SpriteColor = Color.White, SpriteRotation = (float)(1.5f * Math.PI), Action = ActivateTopMenu });
+            ConfigurationMenu.Add(new MenuItem() { MenuText = "Toggle AutoDeploy", TextColor = CfgAutoDeploy ? Color.Gray : Color.DarkGray, Sprite = "Textures\\FactionLogo\\Others\\OtherIcon_33.dds", SpriteColor = CfgAutoDeploy?Color.Green:Color.Red, Action = ToggleAutoDeploy });
+            ConfigurationMenu.Add(new MenuItem() { MenuText = "Toggle Mirroring", TextColor = CfgAutoDeploy ? Color.Gray : Color.DarkGray, Sprite = "Textures\\FactionLogo\\Traders\\TraderIcon_2.dds", SpriteColor = CfgMirror?Color.Green:Color.Red, Action = ToggleMirror });
             ConfigurationMenu.Add(new MenuItem() { MenuText = "Rebuild consist", TextColor = Color.Gray, Sprite = "Textures\\FactionLogo\\Builders\\BuilderIcon_16.dds", SpriteColor = Color.Cyan, Action = ForceBuildAll });
             ConfigurationMenu.Add(new MenuItem() { MenuText = "Detect trailer", TextColor = Color.Gray, Sprite = "Textures\\FactionLogo\\Builders\\BuilderIcon_1.dds", SpriteColor = Color.OrangeRed, Action = LegacyUpdate });
+        }
+
+        private void ToggleAutoDeploy()
+        {
+            CfgAutoDeploy = !CfgAutoDeploy;
+            WriteConfig();
+            BuildConfigurationMenu();
+        }
+
+        private void ToggleMirror()
+        {
+            CfgMirror = !CfgMirror;
+            WriteConfig();
+            BuildConfigurationMenu();
         }
 
         private void FindDisplays()
@@ -930,7 +969,8 @@ namespace IngameScript
             {
                 if (!Consist[i].IsCoupled())
                 {
-                    Consist[i].NextTrailer.Deploy();
+                    if (CfgAutoDeploy)
+                        Consist[i].NextTrailer.Deploy();
                     Consist[i].NextTrailer = null;
                     ArrangeTrailersIntoTrain(FirstTrailer);
                     BuildTopMenu();
@@ -947,7 +987,8 @@ namespace IngameScript
                     ManagedDisplay.SetFeedback(new Feedback() { BackgroundColor = Color.Green, Sprite = "Danger", TextColor = Color.Yellow, duration = 8, Message = "Trailer found" });
             }
             // Mirror vehicle state in trailers
-            Mirror();
+            if (CfgMirror)
+                Mirror();
         }
     }
 }

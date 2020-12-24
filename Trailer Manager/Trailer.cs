@@ -237,7 +237,8 @@ namespace IngameScript
             }
             public void Detach()
             {
-                Deploy();
+                if (program.CfgAutoDeploy)
+                    Deploy();
                 // Get the grid that's towing me
                 IMyCubeGrid TowingGrid = program.Couplings[ForwardHitch.TopGrid].GetOtherGrid(Grid);
 
