@@ -341,19 +341,23 @@ namespace IngameScript
                         this.TractorHitch = hinge;
                         ini.Set(Section, "hitch", true);
                     }
-                    else if (hinge.CustomName.Contains("Solar")){
+                    else if (hinge.CustomName.Contains("Solar")|| hinge.CustomName.Contains("Ramp"))
+                    {
                         // Definitely want to ignore these guys
                         ;
                     }
                     else
                     {
-                        bool front = (hinge.CustomName.ToLower().EndsWith("front")|| hinge.CustomName.ToLower().EndsWith("steering"));
-                        ini.Set(Section, "front", front);
                         // A new trailer has been identified, set a name and allow BuildAll() to run
-                        if (front)
+                        if ((hinge.CustomName.ToLower().EndsWith("front") || hinge.CustomName.ToLower().EndsWith("steering")))
                         {
+                            ini.Set(Section, "front", true);
                             ini.Set(Section, "name", hinge.CubeGrid.CustomName);
                             UnidentifiedTrailer = false;
+                        } 
+                        else if (hinge.CustomName.ToLower().EndsWith("rear"))
+                        {
+                            ini.Set(Section, "front", false);
                         }
                     }
                     hinge.CustomData = ini.ToString();
@@ -405,7 +409,7 @@ namespace IngameScript
             foreach (var hinge in Hinges)
             {
                 if (MyIni.HasSection(hinge.CustomData, Section) && ini.TryParse(hinge.CustomData))
-                    if (!ini.Get(Section, "front").ToBoolean() || GridsFound.Contains(hinge.CubeGrid))
+                    if (ini.ContainsKey(Section,"front") && !ini.Get(Section, "front").ToBoolean() || GridsFound.Contains(hinge.CubeGrid))
                     {
                         if (Trailers.ContainsKey(hinge.CubeGrid))
                             Trailers[hinge.CubeGrid].SetRearHitch(hinge);
