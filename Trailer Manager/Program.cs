@@ -36,7 +36,7 @@ namespace IngameScript
         int selectedline = 0; // Menu selection position
         Trailer selectedtrailer; // Selected trailer in menu (to recalculate selectedline in the event of a rebuild)
         enum MenuOption { Top, AllTrailers, AllBatteries, AllHydrogen, Trailer, Config };
-        enum TimerTask { Menu, Stow, Deploy };
+        enum TimerTask { Menu, Stow, Deploy, Toggle };
         MenuOption SelectedMenu = MenuOption.Top;
         List<MenuItem> TopMenu = new List<MenuItem>();
         List<MenuItem> AllTrailersMenu = new List<MenuItem>();
@@ -347,7 +347,7 @@ namespace IngameScript
                     }
                     else
                     {
-                        bool front = (hinge.CustomName.ToLower().EndsWith("front"));
+                        bool front = (hinge.CustomName.ToLower().EndsWith("front")|| hinge.CustomName.ToLower().EndsWith("steering"));
                         ini.Set(Section, "front", front);
                         // A new trailer has been identified, set a name and allow BuildAll() to run
                         if (front)
@@ -369,6 +369,8 @@ namespace IngameScript
                         ini.Set(Section, "task", "deploy");
                     else if (timer.CustomName.ToLower().Contains("pack"))
                         ini.Set(Section, "task", "stow");
+                    else if (timer.CustomName.ToLower().Contains("trailer") || timer.CustomName.ToLower().Contains("hook/unhook"))
+                        ini.Set(Section, "task", "toggle");
                 }
                 timer.CustomData = ini.ToString();
             }
@@ -502,6 +504,9 @@ namespace IngameScript
                             case "deploy":
                             case "unpack":
                                 Trailers[Timer.CubeGrid].AddTimer(Timer, TimerTask.Deploy);
+                                break;
+                            case "toggle":
+                                Trailers[Timer.CubeGrid].AddTimer(Timer, TimerTask.Toggle);
                                 break;
                             default:
                                 Trailers[Timer.CubeGrid].AddTimer(Timer);

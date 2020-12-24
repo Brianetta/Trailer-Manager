@@ -107,6 +107,11 @@ namespace IngameScript
                     StowTimer = timer;
                 else if (task == TimerTask.Deploy)
                     DeployTimer = timer;
+                else if (task == TimerTask.Toggle)
+                {
+                    DeployTimer = timer;
+                    StowTimer = timer;
+                }
                 else Timers.Add(timer);
             }
             public void AddWeapon(IMyUserControllableGun Weapon)
