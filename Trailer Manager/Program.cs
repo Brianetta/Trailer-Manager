@@ -203,6 +203,9 @@ namespace IngameScript
         {
             if (Consist.Count > 0)
                 Consist[Consist.Count - 1].Attach();
+            else
+                if (null != TractorHitch)
+                    TractorHitch.Attach();
         }
         public void AllTrailersWeaponsLive()
         {
