@@ -68,6 +68,7 @@ brakes on      Apply handbrakes
 brakes off     Release handbrakes
 deploy         Deploy / Unpack trailer at rear
 unpack           "
+allpack	       Pack all trailers for travel
 detach         Detach the rear-most trailer
 hitch          Couple a new trailer to the rear
 attach           "
