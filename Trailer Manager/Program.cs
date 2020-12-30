@@ -852,6 +852,9 @@ namespace IngameScript
                     case "connector":
                         SwitchRearConnector();
                         break;
+                    case "allpack":
+                        AllTrailersDeploy();
+                        break;
                     case "weapons on":
                         AllTrailersWeaponsLive();
                         break;
