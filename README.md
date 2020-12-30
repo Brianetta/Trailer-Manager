@@ -1,6 +1,8 @@
 # Space Engineers Trailer Manager
 
-**Designed with ISL compatibility as a goal**
+[On the Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2341786466)
+
+**Designed with [ISL](https://steamcommunity.com/sharedfiles/filedetails/?id=2316120850) compatibility as a goal**
 
 ## Features:
 
