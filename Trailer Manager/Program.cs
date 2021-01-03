@@ -418,6 +418,8 @@ namespace IngameScript
                             Trailers[hinge.CubeGrid].SetRearHitch(hinge);
                         if (hinge.IsAttached)
                             HingeParts.Add(hinge.Top);
+                        if (hinge.CubeGrid.Equals(Me.CubeGrid))
+                            TractorHitch = hinge;
                     }
                     else if (hinge.CubeGrid.Equals(Me.CubeGrid) && ini.Get(Section, "hitch").ToBoolean())
                     {
