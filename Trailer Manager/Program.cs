@@ -498,32 +498,32 @@ namespace IngameScript
                         Trailers[Controller.CubeGrid].AddController(Controller);
             }
             // Find all the timers on a trailer
+            string taskname;
             foreach (var Timer in Blocks.OfType<IMyTimerBlock>().ToList())
             {
                 if (Trailers.ContainsKey(Timer.CubeGrid))
                 {
                     if (MyIni.HasSection(Timer.CustomData, Section) && ini.TryParse(Timer.CustomData))
                     {
-                        switch (ini.Get(Section, "task").ToString())
+                        taskname = ini.Get(Section, "task").ToString();
+                        switch (taskname)
                         {
                             case "stow":
                             case "pack":
-                                Trailers[Timer.CubeGrid].AddTimer(Timer, TimerTask.Stow);
+                                Trailers[Timer.CubeGrid].AddTimer(Timer, task:TimerTask.Stow);
                                 break;
                             case "deploy":
                             case "unpack":
-                                Trailers[Timer.CubeGrid].AddTimer(Timer, TimerTask.Deploy);
+                                Trailers[Timer.CubeGrid].AddTimer(Timer, task:TimerTask.Deploy);
                                 break;
                             case "toggle":
-                                Trailers[Timer.CubeGrid].AddTimer(Timer, TimerTask.Toggle);
+                                Trailers[Timer.CubeGrid].AddTimer(Timer, task:TimerTask.Toggle);
                                 break;
                             default:
-                                Trailers[Timer.CubeGrid].AddTimer(Timer);
+                                Trailers[Timer.CubeGrid].AddTimer(Timer, taskName: taskname.Length > 0 ? taskname : Timer.CustomName);
                                 break;
                         }
                     }
-                    else
-                        Trailers[Timer.CubeGrid].AddTimer(Timer);
                 }
             }
 

@@ -23,11 +23,17 @@ namespace IngameScript
             private List<IMyPowerProducer> Engines = new List<IMyPowerProducer>();
             private List<IMyGasTank> HTanks = new List<IMyGasTank>();
             private List<IMyGasGenerator> HGens = new List<IMyGasGenerator>();
-            private List<IMyTimerBlock> Timers = new List<IMyTimerBlock>();
+            private List<TimerWithTaskName> TimersWithTask = new List<TimerWithTaskName>();
             private List<IMyUserControllableGun> Weapons = new List<IMyUserControllableGun>();
             private List<IMyShipConnector> Connectors = new List<IMyShipConnector>();
             private IMyShipController controller;
             private IMyTimerBlock StowTimer, DeployTimer;
+
+            private struct TimerWithTaskName
+            {
+                public IMyTimerBlock Timer;
+                public string TaskName;
+            }
 
             internal List<MenuItem> Menu = new List<MenuItem>();
 
@@ -55,7 +61,7 @@ namespace IngameScript
                 Engines.Clear();
                 HTanks.Clear();
                 HGens.Clear();
-                Timers.Clear();
+                TimersWithTask.Clear();
                 Weapons.Clear();
                 Connectors.Clear();
             }
@@ -100,7 +106,7 @@ namespace IngameScript
             {
                 this.controller = controller;
             }
-            public void AddTimer(IMyTimerBlock timer, TimerTask task = TimerTask.Menu)
+            public void AddTimer(IMyTimerBlock timer, TimerTask task = TimerTask.Menu, string taskName = "")
             {
                 // Pack is used to flag when a timer is for stowing (packing) or deploying (unpacking)
                 if (task == TimerTask.Stow)
@@ -112,7 +118,10 @@ namespace IngameScript
                     DeployTimer = timer;
                     StowTimer = timer;
                 }
-                else Timers.Add(timer);
+                else
+                {
+                    TimersWithTask.Add(new TimerWithTaskName { Timer = timer, TaskName = taskName });
+                }
             }
             public void AddWeapon(IMyUserControllableGun Weapon)
             {
@@ -344,11 +353,11 @@ namespace IngameScript
                 {
                     Menu.Add(new MenuItem() { MenuText = "Switch Connector(s)", TextColor = Color.Gray, SpriteColor = Color.Yellow, Action = SwitchConnector, Sprite = "CircleHollow" });
                 }
-                if (Timers.Count > 0)
+                if (TimersWithTask.Count > 0)
                 {
-                    foreach (var Timer in Timers)
+                    foreach (var TimerWithTask in TimersWithTask)
                     {
-                        Menu.Add(new MenuItem() { MenuText = Timer.CustomName, TextColor = Color.Gray, SpriteColor = Color.Blue, Action = Timer.Trigger, Sprite = "Textures\\FactionLogo\\Builders\\BuilderIcon_1.dds" });
+                        Menu.Add(new MenuItem() { MenuText = TimerWithTask.TaskName, TextColor = Color.Gray, SpriteColor = Color.Blue, Action = TimerWithTask.Timer.Trigger, Sprite = "Textures\\FactionLogo\\Builders\\BuilderIcon_1.dds" });
                     }
                 }
                 if (Weapons.Count > 0)
