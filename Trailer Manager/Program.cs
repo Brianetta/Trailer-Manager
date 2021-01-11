@@ -21,7 +21,7 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
-
+        const string Version = "1.0.4";
         List<IMyTerminalBlock> Blocks = new List<IMyTerminalBlock>();
         List<IMyMotorAdvancedStator> Hinges;
         List<IMyAttachableTopBlock> HingeParts = new List<IMyAttachableTopBlock>();
@@ -608,6 +608,7 @@ namespace IngameScript
             ReadConfig();
             BuildAll();
             Runtime.UpdateFrequency = UpdateFrequency.Update10;
+            Echo("Version "+Version);
         }
 
         private void ForceBuildAll()
