@@ -765,6 +765,7 @@ namespace IngameScript
 
         private void FindDisplays()
         {
+            Displays.Clear();
             foreach (IMyTerminalBlock TextSurfaceProvider in Blocks.OfType<IMyTextSurfaceProvider>())
             {
                 if (((IMyTextSurfaceProvider)TextSurfaceProvider).SurfaceCount > 0 && (MyIni.HasSection(TextSurfaceProvider.CustomData, Section)))
