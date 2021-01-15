@@ -316,15 +316,18 @@ namespace IngameScript
                         AllTrailersHydrogenStockpileOff();
                 PreviousStockpile = enabledState.Value;
             }
-            if (Controller.HandBrake && !PreviousHandbrake)
+            if (null != Controller)
             {
-                AllTrailersHandbrakeOn();
-                PreviousHandbrake = true;
-            }
-            else if (!Controller.HandBrake && PreviousHandbrake)
-            {
-                AllTrailersHandbrakeOff();
-                PreviousHandbrake = false;
+                if (Controller.HandBrake && !PreviousHandbrake)
+                {
+                    AllTrailersHandbrakeOn();
+                    PreviousHandbrake = true;
+                }
+                else if (!Controller.HandBrake && PreviousHandbrake)
+                {
+                    AllTrailersHandbrakeOff();
+                    PreviousHandbrake = false;
+                }
             }
         }
 
