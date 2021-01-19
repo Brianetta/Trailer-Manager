@@ -399,7 +399,7 @@ namespace IngameScript
             ClearMirrorLists();
             FirstTrailer = null;
             // First iteration finds front hinges (by name) and creates the Trailer instances for them
-            foreach (var hinge in Hinges.ToList())
+            foreach (var hinge in Hinges)
             {
                 // Only the first one found. If there's more than one, that's user error, but unlikely to matter.
                 if (!GridsFound.Contains(hinge.CubeGrid) && ((MyIni.HasSection(hinge.CustomData, Section) && ini.TryParse(hinge.CustomData) && ini.Get(Section, "front").ToBoolean())))
@@ -438,7 +438,7 @@ namespace IngameScript
             }
 
             // Get a list of all the batteries in each trailer
-            foreach (var Battery in Blocks.OfType<IMyBatteryBlock>().ToList())
+            foreach (var Battery in Blocks.OfType<IMyBatteryBlock>())
             {
                 if (Me.CubeGrid == Battery.CubeGrid)
                     Batteries.Add(Battery);
@@ -446,13 +446,13 @@ namespace IngameScript
                     Trailers[Battery.CubeGrid].AddBattery(Battery);
             }
             // Get a list of all the wheel suspensions in each trailer
-            foreach (var Wheel in Blocks.OfType<IMyMotorSuspension>().ToList())
+            foreach (var Wheel in Blocks.OfType<IMyMotorSuspension>())
             {
                 if(Trailers.ContainsKey(Wheel.CubeGrid))
                     Trailers[Wheel.CubeGrid].AddWheel(Wheel);
             }
             // Get a list of all the hydrogen engines in each trailer
-            foreach (var Engine in Blocks.OfType<IMyPowerProducer>().ToList())
+            foreach (var Engine in Blocks.OfType<IMyPowerProducer>())
             {
                 if (IsHydrogenEngine(Engine))
                     if (Me.CubeGrid == Engine.CubeGrid)
@@ -461,7 +461,7 @@ namespace IngameScript
                         Trailers[Engine.CubeGrid].AddEngine(Engine);
             }
             // Get a list of all the hydrogen tanks in each trailer
-            foreach (var Tank in Blocks.OfType<IMyGasTank>().ToList())
+            foreach (var Tank in Blocks.OfType<IMyGasTank>())
             {
                 if (IsHydrogenTank(Tank))
                     if (Me.CubeGrid == Tank.CubeGrid)
@@ -470,7 +470,7 @@ namespace IngameScript
                         Trailers[Tank.CubeGrid].AddHTank(Tank);
             }
             // Get a list of all the O2/H2 generators in each trailer
-            foreach (var Gen in Blocks.OfType<IMyGasGenerator>().ToList())
+            foreach (var Gen in Blocks.OfType<IMyGasGenerator>())
             {
                 if (Me.CubeGrid == Gen.CubeGrid)
                     HGens.Add(Gen);
@@ -478,7 +478,7 @@ namespace IngameScript
                     Trailers[Gen.CubeGrid].AddHGen(Gen);
             }
             // Find all the weapons on a trailer
-            foreach (var Weapon in Blocks.OfType<IMyUserControllableGun>().ToList())
+            foreach (var Weapon in Blocks.OfType<IMyUserControllableGun>())
             {
                 if (Me.CubeGrid == Weapon.CubeGrid)
                     Weapons.Add(Weapon);
@@ -486,13 +486,13 @@ namespace IngameScript
                     Trailers[Weapon.CubeGrid].AddWeapon(Weapon);
             }
             // Find all the connectors on a trailer
-            foreach (var Connector in Blocks.OfType<IMyShipConnector>().ToList())
+            foreach (var Connector in Blocks.OfType<IMyShipConnector>())
             {
                 if (Trailers.ContainsKey(Connector.CubeGrid))
                     Trailers[Connector.CubeGrid].AddConnector(Connector);
             }
             // Get a controller for the handbrake
-            foreach (var Controller in Blocks.OfType<IMyShipController>().ToList())
+            foreach (var Controller in Blocks.OfType<IMyShipController>())
             {
                 if (Controller.CanControlShip)
                     if (Me.CubeGrid == Controller.CubeGrid)
@@ -502,7 +502,7 @@ namespace IngameScript
             }
             // Find all the timers on a trailer
             string taskname;
-            foreach (var Timer in Blocks.OfType<IMyTimerBlock>().ToList())
+            foreach (var Timer in Blocks.OfType<IMyTimerBlock>())
             {
                 if (Trailers.ContainsKey(Timer.CubeGrid))
                 {
@@ -550,7 +550,7 @@ namespace IngameScript
             // Now weed out the grids where a second hinge/rotor part wasn't found
             // Yes, some might have rotor parts, but that's not a problem
             // Just want to exclude any that would give us null values.
-            foreach (var grid in Couplings.Keys.ToList())
+            foreach (var grid in Couplings.Keys)
             {
                 if (!Couplings[grid].HasTwoParts())
                     Couplings.Remove(grid);
