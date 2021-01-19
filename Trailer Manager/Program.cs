@@ -776,7 +776,7 @@ namespace IngameScript
                 {
                     ini.TryParse(TextSurfaceProvider.CustomData);
                     var displayNumber = ini.Get(Section, "display").ToUInt16();
-                    if (displayNumber < ((IMyTextSurfaceProvider)TextSurfaceProvider).SurfaceCount)
+                    if (displayNumber < ((IMyTextSurfaceProvider)TextSurfaceProvider).SurfaceCount || ((IMyTextSurfaceProvider)TextSurfaceProvider).SurfaceCount == 0)
                     {
                         var display = ((IMyTextSurfaceProvider)TextSurfaceProvider).GetSurface(ini.Get(Section, "display").ToInt16());
                         float scale = ini.Get(Section, "scale").ToSingle(1.0f);
