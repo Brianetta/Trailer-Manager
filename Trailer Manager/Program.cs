@@ -399,7 +399,7 @@ namespace IngameScript
             ClearMirrorLists();
             FirstTrailer = null;
             // First iteration finds front hinges (by name) and creates the Trailer instances for them
-            foreach (var hinge in Hinges)
+            foreach (var hinge in Hinges.ToList())
             {
                 // Only the first one found. If there's more than one, that's user error, but unlikely to matter.
                 if (!GridsFound.Contains(hinge.CubeGrid) && ((MyIni.HasSection(hinge.CustomData, Section) && ini.TryParse(hinge.CustomData) && ini.Get(Section, "front").ToBoolean())))
