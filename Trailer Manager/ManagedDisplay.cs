@@ -39,11 +39,13 @@ namespace IngameScript
             private int CursorMenuPosition; // Position of cursor within window
             static Program.Feedback Feedback;
             private float Scale;
+            private Color HighlightColor;
 
-            public ManagedDisplay(IMyTextSurface surface, float scale = 1.0f)
+            public ManagedDisplay(IMyTextSurface surface, float scale = 1.0f, Color highlightColor = new Color())
             {
                 this.surface = surface;
                 this.Scale = scale;
+                this.HighlightColor = highlightColor;
 
                 // Scale everything!
                 StartHeight *= scale;
@@ -112,7 +114,7 @@ namespace IngameScript
                     Type = SpriteType.TEXTURE,
                     Data = "SquareSimple",
                     Position = CursorDrawPosition,
-                    Color = Color.OrangeRed,
+                    Color = HighlightColor,
                     Size = new Vector2(viewport.Width, LineHeight)
                 });
             }
@@ -135,7 +137,7 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "AH_BoreSight",
-                    Color = (WindowPosition > 0) ? Color.OrangeRed : Color.Black.Alpha(0),
+                    Color = (WindowPosition > 0) ? HighlightColor : Color.Black.Alpha(0),
                     RotationOrScale = 1.5f * (float)Math.PI,
                     Size = new Vector2(LineHeight, LineHeight),
                     Position = Position,
@@ -145,7 +147,7 @@ namespace IngameScript
                 {
                     Type = SpriteType.TEXTURE,
                     Data = "AH_BoreSight",
-                    Color = (WindowPosition + WindowSize < menuLength) ? Color.OrangeRed : Color.Black.Alpha(0),
+                    Color = (WindowPosition + WindowSize < menuLength) ? HighlightColor : Color.Black.Alpha(0),
                     RotationOrScale = 0.5f * (float)Math.PI,
                     Size = new Vector2(LineHeight, LineHeight),
                     Position = Position,
@@ -157,7 +159,7 @@ namespace IngameScript
                     Data = "----------------------------",
                     Position = Position,
                     RotationOrScale = RegularFontSize,
-                    Color = Color.OrangeRed,
+                    Color = HighlightColor,
                     Alignment = TextAlignment.CENTER,
                     FontId = "White"
                 });
@@ -176,6 +178,8 @@ namespace IngameScript
 
             private void AddMenuItem(string menuText, string sprite = "SquareSimple", float spriteRotation = 0, Color? spriteColor = null, Color? textColor = null)
             {
+                if (null == spriteColor)
+                    spriteColor = Color.White;
                 float SpriteOffset = 25f * Scale;
                 Position += new Vector2(0, LineHeight);
                 frame.Add(new MySprite()

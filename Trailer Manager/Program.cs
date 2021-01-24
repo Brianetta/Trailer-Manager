@@ -796,7 +796,17 @@ namespace IngameScript
                     {
                         var display = ((IMyTextSurfaceProvider)TextSurfaceProvider).GetSurface(ini.Get(Section, "display").ToInt16());
                         float scale = ini.Get(Section, "scale").ToSingle(1.0f);
-                        Displays.Add(new ManagedDisplay(display, scale));
+                        string DefaultColor = "FF4500";
+                        string ColorStr = ini.Get(Section, "color").ToString(DefaultColor);
+                        if (ColorStr.Length < 6)
+                            ColorStr = DefaultColor;
+                        Color color = new Color() { 
+                            R = byte.Parse(ColorStr.Substring(0, 2), System.Globalization.NumberStyles.HexNumber), 
+                            G = byte.Parse(ColorStr.Substring(2, 2), System.Globalization.NumberStyles.HexNumber), 
+                            B = byte.Parse(ColorStr.Substring(4, 2), System.Globalization.NumberStyles.HexNumber), 
+                            A = 255 
+                        };
+                        Displays.Add(new ManagedDisplay(display, scale, color));
                     }
                     else
                     {
