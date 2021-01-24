@@ -26,11 +26,13 @@ Screen/Cockpit example:
 [trailer]
 display=0
 scale=0.5
+color=FF4500
 
 Change the number to the screen that you wish to use; numbers start at 0, so a
 five-screen cockpit has screens 0, 1, 2, 3 and 4.
 
 Scale is a scaling factor; adjust this if the font size is wrong.
+Color is optional, and allows the highlight color to be customised.
 
 Programmable block example:
 ---------------------------
