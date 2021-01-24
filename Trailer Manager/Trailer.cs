@@ -13,7 +13,12 @@ namespace IngameScript
     {
         class Trailer
         {
-            private IMyMotorAdvancedStator ForwardHitch, RearHitch;
+            private IMyMotorAdvancedStator ForwardHitch;
+            public IMyMotorAdvancedStator RearHitch
+            {
+                get;
+                set;
+            }
             private IMyCubeGrid Grid;
             public string Name;
             public Trailer NextTrailer;
@@ -69,11 +74,6 @@ namespace IngameScript
             public bool IsCoupled()
             {
                 return null != RearHitch && RearHitch.IsAttached;
-            }
-
-            public void SetRearHitch(IMyMotorAdvancedStator hinge)
-            {
-                this.RearHitch = hinge;
             }
 
             public void Attach()

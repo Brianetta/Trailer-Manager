@@ -21,9 +21,9 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
-        const string Version = "1.0.5";
+        const string Version = "1.0.6";
         List<IMyTerminalBlock> Blocks = new List<IMyTerminalBlock>();
-        List<IMyMotorAdvancedStator> Hinges;
+        List<IMyMotorAdvancedStator> Hinges = new List<IMyMotorAdvancedStator>();
         List<IMyAttachableTopBlock> HingeParts = new List<IMyAttachableTopBlock>();
         Dictionary<IMyCubeGrid, Trailer> Trailers = new Dictionary<IMyCubeGrid, Trailer>();
         Dictionary<IMyCubeGrid, Coupling> Couplings = new Dictionary<IMyCubeGrid, Coupling>();
@@ -391,120 +391,130 @@ namespace IngameScript
         {
             Trailers.Clear();
             Blocks.Clear();
-            GridTerminalSystem.GetBlocksOfType(Blocks, block => block.IsSameConstructAs(Me));
-            // Find all the hinges
-            Hinges = Blocks.OfType<IMyMotorAdvancedStator>().ToList();
-            GridsFound.Clear();
+            Hinges.Clear();
             HingeParts.Clear();
             ClearMirrorLists();
             FirstTrailer = null;
-            // First iteration finds front hinges (by name) and creates the Trailer instances for them
-            foreach (var hinge in Hinges.ToList())
-            {
-                // Only the first one found. If there's more than one, that's user error, but unlikely to matter.
-                if (!GridsFound.Contains(hinge.CubeGrid) && ((MyIni.HasSection(hinge.CustomData, Section) && ini.TryParse(hinge.CustomData) && ini.Get(Section, "front").ToBoolean())))
+            // Populate Blocks, excluding hinges, which will instead populate either Trailers or Hinges
+            GridTerminalSystem.GetBlocksOfType(Blocks, block => { 
+                if(!block.IsSameConstructAs(Me))
+                    return false;
+                IMyMotorAdvancedStator hinge = block as IMyMotorAdvancedStator;
+                if (null != hinge && MyIni.HasSection(hinge.CustomData, Section) && ini.TryParse(hinge.CustomData))
                 {
-                    GridsFound.Add(hinge.CubeGrid);
-                    Trailers.Add(hinge.CubeGrid, new Trailer(this, hinge));
-                    Hinges.Remove(hinge);
+                    if (ini.Get(Section, "front").ToBoolean())
+                    {
+                        Trailers.Add(hinge.CubeGrid, new Trailer(this, hinge));
+                    }
+                    else
+                        Hinges.Add(hinge);
                     if (hinge.IsAttached)
                         HingeParts.Add(hinge.Top);
                 }
-            }
-            // Second iteration finds all of the hinges not matched in the first iteration
+                return true;
+            });
+            // Iterate remaining blocks, now that all the Trailers have been found
+            // First the hinges
             foreach (var hinge in Hinges)
             {
                 if (MyIni.HasSection(hinge.CustomData, Section) && ini.TryParse(hinge.CustomData))
-                    if (ini.ContainsKey(Section,"front") && !ini.Get(Section, "front").ToBoolean() || GridsFound.Contains(hinge.CubeGrid))
+                {
+                    if (ini.ContainsKey(Section, "front") && !ini.Get(Section, "front").ToBoolean())
                     {
                         if (Trailers.ContainsKey(hinge.CubeGrid))
-                            Trailers[hinge.CubeGrid].SetRearHitch(hinge);
-                        if (hinge.IsAttached)
-                            HingeParts.Add(hinge.Top);
+                            Trailers[hinge.CubeGrid].RearHitch = hinge; // Regardless if already set
                         if (hinge.CubeGrid.Equals(Me.CubeGrid))
                             TractorHitch = hinge;
                     }
                     else if (hinge.CubeGrid.Equals(Me.CubeGrid) && ini.Get(Section, "hitch").ToBoolean())
                     {
                         TractorHitch = hinge;
-                        if (hinge.IsAttached)
-                            HingeParts.Add(hinge.Top);
                     }
+                    else if (Trailers.ContainsKey(hinge.CubeGrid) && Trailers[hinge.CubeGrid].RearHitch == null)
+                    {
+                        Trailers[hinge.CubeGrid].RearHitch = hinge;
+                    }
+                }
             }
 
-            foreach (var Trailer in Trailers.Values)
+            // Now everything else
+            foreach (var block in Blocks)
             {
-                Trailer.ClearLists();
-            }
-
-            // Get a list of all the batteries in each trailer
-            foreach (var Battery in Blocks.OfType<IMyBatteryBlock>())
-            {
-                if (Me.CubeGrid == Battery.CubeGrid)
-                    Batteries.Add(Battery);
-                else if (Trailers.ContainsKey(Battery.CubeGrid))
-                    Trailers[Battery.CubeGrid].AddBattery(Battery);
-            }
-            // Get a list of all the wheel suspensions in each trailer
-            foreach (var Wheel in Blocks.OfType<IMyMotorSuspension>())
-            {
-                if(Trailers.ContainsKey(Wheel.CubeGrid))
-                    Trailers[Wheel.CubeGrid].AddWheel(Wheel);
-            }
-            // Get a list of all the hydrogen engines in each trailer
-            foreach (var Engine in Blocks.OfType<IMyPowerProducer>())
-            {
-                if (IsHydrogenEngine(Engine))
-                    if (Me.CubeGrid == Engine.CubeGrid)
-                        Engines.Add(Engine);
-                    else if (Trailers.ContainsKey(Engine.CubeGrid))
-                        Trailers[Engine.CubeGrid].AddEngine(Engine);
-            }
-            // Get a list of all the hydrogen tanks in each trailer
-            foreach (var Tank in Blocks.OfType<IMyGasTank>())
-            {
-                if (IsHydrogenTank(Tank))
-                    if (Me.CubeGrid == Tank.CubeGrid)
-                        HTanks.Add(Tank);
-                    else if (Trailers.ContainsKey(Tank.CubeGrid))
-                        Trailers[Tank.CubeGrid].AddHTank(Tank);
-            }
-            // Get a list of all the O2/H2 generators in each trailer
-            foreach (var Gen in Blocks.OfType<IMyGasGenerator>())
-            {
-                if (Me.CubeGrid == Gen.CubeGrid)
-                    HGens.Add(Gen);
-                else if (Trailers.ContainsKey(Gen.CubeGrid))
-                    Trailers[Gen.CubeGrid].AddHGen(Gen);
-            }
-            // Find all the weapons on a trailer
-            foreach (var Weapon in Blocks.OfType<IMyUserControllableGun>())
-            {
-                if (Me.CubeGrid == Weapon.CubeGrid)
-                    Weapons.Add(Weapon);
-                else if (Trailers.ContainsKey(Weapon.CubeGrid))
-                    Trailers[Weapon.CubeGrid].AddWeapon(Weapon);
-            }
-            // Find all the connectors on a trailer
-            foreach (var Connector in Blocks.OfType<IMyShipConnector>())
-            {
-                if (Trailers.ContainsKey(Connector.CubeGrid))
-                    Trailers[Connector.CubeGrid].AddConnector(Connector);
-            }
-            // Get a controller for the handbrake
-            foreach (var Controller in Blocks.OfType<IMyShipController>())
-            {
-                if (Controller.CanControlShip)
-                    if (Me.CubeGrid == Controller.CubeGrid)
-                        this.Controller = Controller;
-                    else if (Trailers.ContainsKey(Controller.CubeGrid))
-                        Trailers[Controller.CubeGrid].AddController(Controller);
-            }
-            // Find all the timers on a trailer
-            string taskname;
-            foreach (var Timer in Blocks.OfType<IMyTimerBlock>())
-            {
-                if (Trailers.ContainsKey(Timer.CubeGrid))
+                // Add battery to its trailer
+                IMyBatteryBlock Battery = block as IMyBatteryBlock;
+                if (null != Battery)
+                {
+                    if (Me.CubeGrid == Battery.CubeGrid)
+                        Batteries.Add(Battery);
+                    else if (Trailers.ContainsKey(Battery.CubeGrid))
+                        Trailers[Battery.CubeGrid].AddBattery(Battery);
+                }
+                // Add wheel suspension to its trailer
+                IMyMotorSuspension Wheel = block as IMyMotorSuspension;
+                if (null != Wheel)
+                {
+                    if (Trailers.ContainsKey(Wheel.CubeGrid))
+                        Trailers[Wheel.CubeGrid].AddWheel(Wheel);
+                }
+                // Add hydrogen engine to its trailer
+                IMyPowerProducer Engine = block as IMyPowerProducer;
+                if (null != Engine)
+                {
+                    if (IsHydrogenEngine(Engine))
+                        if (Me.CubeGrid == Engine.CubeGrid)
+                            Engines.Add(Engine);
+                        else if (Trailers.ContainsKey(Engine.CubeGrid))
+                            Trailers[Engine.CubeGrid].AddEngine(Engine);
+                }
+                // Add hydrogen tank to its trailer
+                IMyGasTank Tank = block as IMyGasTank;
+                if (null != Tank)
+                {
+                    if (IsHydrogenTank(Tank))
+                        if (Me.CubeGrid == Tank.CubeGrid)
+                            HTanks.Add(Tank);
+                        else if (Trailers.ContainsKey(Tank.CubeGrid))
+                            Trailers[Tank.CubeGrid].AddHTank(Tank);
+                }
+                // Add O2/H2 generator to its trailer
+                IMyGasGenerator Gen = block as IMyGasGenerator;
+                if (null != Gen)
+                {
+                    if (Me.CubeGrid == Gen.CubeGrid)
+                        HGens.Add(Gen);
+                    else if (Trailers.ContainsKey(Gen.CubeGrid))
+                        Trailers[Gen.CubeGrid].AddHGen(Gen);
+                }
+                // Add weapon to its trailer
+                IMyUserControllableGun Weapon = block as IMyUserControllableGun;
+                if (null != Weapon)
+                {
+                    if (Me.CubeGrid == Weapon.CubeGrid)
+                        Weapons.Add(Weapon);
+                    else if (Trailers.ContainsKey(Weapon.CubeGrid))
+                        Trailers[Weapon.CubeGrid].AddWeapon(Weapon);
+                }
+                // Add connector to its trailer
+                IMyShipConnector Connector = block as IMyShipConnector;
+                if (null != Connector)
+                {
+                    if (Trailers.ContainsKey(Connector.CubeGrid))
+                        Trailers[Connector.CubeGrid].AddConnector(Connector);
+                }
+                // Get a controller for the handbrake
+                IMyShipController Controller = block as IMyShipController;
+                if (null != Controller)
+                {
+                    if (Controller.CanControlShip)
+                        if (Me.CubeGrid == Controller.CubeGrid)
+                            this.Controller = Controller;
+                        else if (Trailers.ContainsKey(Controller.CubeGrid))
+                            Trailers[Controller.CubeGrid].AddController(Controller);
+                }
+                // Add timer to its trailer
+                string taskname;
+                IMyTimerBlock Timer = block as IMyTimerBlock;
+                if (null != Timer && Trailers.ContainsKey(Timer.CubeGrid))
                 {
                     if (MyIni.HasSection(Timer.CustomData, Section) && ini.TryParse(Timer.CustomData))
                     {
@@ -513,14 +523,14 @@ namespace IngameScript
                         {
                             case "stow":
                             case "pack":
-                                Trailers[Timer.CubeGrid].AddTimer(Timer, task:TimerTask.Stow);
+                                Trailers[Timer.CubeGrid].AddTimer(Timer, task: TimerTask.Stow);
                                 break;
                             case "deploy":
                             case "unpack":
-                                Trailers[Timer.CubeGrid].AddTimer(Timer, task:TimerTask.Deploy);
+                                Trailers[Timer.CubeGrid].AddTimer(Timer, task: TimerTask.Deploy);
                                 break;
                             case "toggle":
-                                Trailers[Timer.CubeGrid].AddTimer(Timer, task:TimerTask.Toggle);
+                                Trailers[Timer.CubeGrid].AddTimer(Timer, task: TimerTask.Toggle);
                                 break;
                             default:
                                 Trailers[Timer.CubeGrid].AddTimer(Timer, taskName: taskname.Length > 0 ? taskname : Timer.CustomName);
@@ -529,7 +539,6 @@ namespace IngameScript
                     }
                 }
             }
-
             GridsFound.Clear();
             Couplings.Clear();
             // Find all grids with hinge parts on them (some of which will be all of the couplings)
