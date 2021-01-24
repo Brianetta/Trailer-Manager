@@ -501,6 +501,13 @@ namespace IngameScript
                     if (Trailers.ContainsKey(Connector.CubeGrid))
                         Trailers[Connector.CubeGrid].AddConnector(Connector);
                 }
+                // Add antenna to its trailer
+                IMyRadioAntenna Antenna = block as IMyRadioAntenna;
+                if (null != Antenna)
+                {
+                    if (Trailers.ContainsKey(Antenna.CubeGrid))
+                        Trailers[Antenna.CubeGrid].AddAntenna(Antenna);
+                }
                 // Get a controller for the handbrake
                 IMyShipController Controller = block as IMyShipController;
                 if (null != Controller)

@@ -31,6 +31,7 @@ namespace IngameScript
             private List<TimerWithTaskName> TimersWithTask = new List<TimerWithTaskName>();
             private List<IMyUserControllableGun> Weapons = new List<IMyUserControllableGun>();
             private List<IMyShipConnector> Connectors = new List<IMyShipConnector>();
+            private List<IMyRadioAntenna> Antennae = new List<IMyRadioAntenna>();
             private IMyShipController controller;
             private IMyTimerBlock StowTimer, DeployTimer;
 
@@ -57,18 +58,6 @@ namespace IngameScript
                     this.Name = forwardHitch.CubeGrid.CustomName;
                 }
                 this.ForwardHitch = forwardHitch;
-            }
-
-            public void ClearLists()
-            {
-                Batteries.Clear();
-                Wheels.Clear();
-                Engines.Clear();
-                HTanks.Clear();
-                HGens.Clear();
-                TimersWithTask.Clear();
-                Weapons.Clear();
-                Connectors.Clear();
             }
 
             public bool IsCoupled()
@@ -101,6 +90,10 @@ namespace IngameScript
             public void AddHGen(IMyGasGenerator generator)
             {
                 HGens.Add(generator);
+            }
+            public void AddAntenna(IMyRadioAntenna antenna)
+            {
+                Antennae.Add(antenna);
             }
             public void AddController(IMyShipController controller)
             {
@@ -192,6 +185,18 @@ namespace IngameScript
                 foreach (var gen in HGens)
                     gen.Enabled = false;
                 ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Yellow, Message = "O2/H2 Gen Off", Sprite = "MyObjectBuilder_Ore/Ice", duration = 4 });
+            }
+            public void AntennaeOn()
+            {
+                foreach (var antenna in Antennae)
+                    antenna.Enabled = true;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Green, Message = "Antenna On", Sprite = "Textures\\FactionLogo\\Builders\\BuilderIcon_3.dds", duration = 4 });
+            }
+            public void AntennaeOff()
+            {
+                foreach (var antenna in Antennae)
+                    antenna.Enabled = false;
+                ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Red, Message = "Antenna Off", Sprite = "Textures\\FactionLogo\\Builders\\BuilderIcon_3.dds", duration = 4 });
             }
             public void WheelsOff()
             {
@@ -352,6 +357,11 @@ namespace IngameScript
                 if (Connectors.Count>0)
                 {
                     Menu.Add(new MenuItem() { MenuText = "Switch Connector(s)", TextColor = Color.Gray, SpriteColor = Color.Yellow, Action = SwitchConnector, Sprite = "CircleHollow" });
+                }
+                if (Antennae.Count > 0)
+                {
+                    Menu.Add(new MenuItem() { MenuText = "Antenna on", TextColor = Color.Gray, SpriteColor = Color.Green, Action = AntennaeOn, Sprite = "Textures\\FactionLogo\\Builders\\BuilderIcon_3.dds" });
+                    Menu.Add(new MenuItem() { MenuText = "Antenna off", TextColor = Color.Gray, SpriteColor = Color.Red, Action = AntennaeOff, Sprite = "Textures\\FactionLogo\\Builders\\BuilderIcon_3.dds" });
                 }
                 if (TimersWithTask.Count > 0)
                 {
