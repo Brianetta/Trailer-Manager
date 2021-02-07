@@ -566,7 +566,7 @@ namespace IngameScript
             // Now weed out the grids where a second hinge/rotor part wasn't found
             // Yes, some might have rotor parts, but that's not a problem
             // Just want to exclude any that would give us null values.
-            foreach (var grid in Couplings.Keys)
+            foreach (var grid in Couplings.Keys.ToList())
             {
                 if (!Couplings[grid].HasTwoParts())
                     Couplings.Remove(grid);
