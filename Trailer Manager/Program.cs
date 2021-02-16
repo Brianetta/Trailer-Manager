@@ -21,7 +21,7 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
-        const string Version = "1.0.6";
+        const string Version = "1.0.7";
         List<IMyTerminalBlock> Blocks = new List<IMyTerminalBlock>();
         List<IMyMotorAdvancedStator> Hinges = new List<IMyMotorAdvancedStator>();
         List<IMyAttachableTopBlock> HingeParts = new List<IMyAttachableTopBlock>();
