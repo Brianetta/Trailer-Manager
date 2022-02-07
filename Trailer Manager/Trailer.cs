@@ -34,6 +34,8 @@ namespace IngameScript
             private List<IMyRadioAntenna> Antennae = new List<IMyRadioAntenna>();
             private IMyShipController controller;
             private IMyTimerBlock StowTimer, DeployTimer;
+            private bool ignoreHandbrake;
+            private bool ignoreHingeLock;
 
             private struct TimerWithTaskName
             {
@@ -43,10 +45,12 @@ namespace IngameScript
 
             internal List<MenuItem> Menu = new List<MenuItem>();
 
-            public Trailer(Program program, IMyMotorAdvancedStator forwardHitch)
+            public Trailer(Program program, IMyMotorAdvancedStator forwardHitch, bool ignoreHandbrake, bool ignoreHingeLock)
             {
                 this.Grid = forwardHitch.CubeGrid;
                 this.program = program;
+                this.ignoreHandbrake = ignoreHandbrake;
+                this.ignoreHingeLock = ignoreHingeLock;
                 if (program.ini.TryParse(forwardHitch.CustomData))
                 {
                     this.Name = program.ini.Get(Program.Section, "name").ToString();
@@ -221,17 +225,19 @@ namespace IngameScript
                 if (null != DeployTimer)
                 {
                     // Put handbrakes and rotor lock on, assuming that the Timer will toggle these
-                    if (null != controller)
-                        controller.HandBrake = false;
-                    ForwardHitch.RotorLock = false;
+                    if (null != controller && !ignoreHandbrake)
+                            controller.HandBrake = false;
+                    if (!ignoreHingeLock)
+                        ForwardHitch.RotorLock = false;
                     // Trigger the timer, which will run in the next frame
                     DeployTimer.Trigger();
                 }
                 else
                 {
-                    if (null != controller)
-                        controller.HandBrake = true;
-                    ForwardHitch.RotorLock = true;
+                    if (null != controller && !ignoreHandbrake)
+                            controller.HandBrake = true;
+                    if (!ignoreHingeLock)
+                        ForwardHitch.RotorLock = true;
                 }
                 ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.Yellow, Message = "Trailer Deployed", Sprite = "Arrow", duration = 4 });
             }
@@ -240,17 +246,19 @@ namespace IngameScript
                 if (null != StowTimer)
                 {
                     // Put handbrakes and rotor lock on, assuming that the Timer will toggle these
-                    if (null != controller)
+                    if (null != controller && !ignoreHandbrake)
                         controller.HandBrake = true;
-                    ForwardHitch.RotorLock = true;
+                    if (!ignoreHingeLock)
+                        ForwardHitch.RotorLock = true;
                     // Trigger the timer, which will run in the next frame
                     StowTimer.Trigger();
                 }
                 else
                 {
-                    if (null != controller)
-                        controller.HandBrake = false;
-                    ForwardHitch.RotorLock = false;
+                    if (null != controller && !ignoreHandbrake)
+                            controller.HandBrake = false;
+                    if (!ignoreHingeLock)
+                        ForwardHitch.RotorLock = false;
                 }
                 ManagedDisplay.SetFeedback(new Feedback { BackgroundColor = Color.Black, TextColor = Color.GreenYellow, Message = "Trailer Stowed", Sprite = "Arrow", SpriteRotation = (float)Math.PI, duration = 4 });
             }

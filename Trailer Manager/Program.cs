@@ -21,7 +21,7 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
-        const string Version = "1.0.7";
+        const string Version = "1.0.8";
         List<IMyTerminalBlock> Blocks = new List<IMyTerminalBlock>();
         List<IMyMotorAdvancedStator> Hinges = new List<IMyMotorAdvancedStator>();
         List<IMyAttachableTopBlock> HingeParts = new List<IMyAttachableTopBlock>();
@@ -404,7 +404,7 @@ namespace IngameScript
                 {
                     if (ini.Get(Section, "front").ToBoolean())
                     {
-                        Trailers.Add(hinge.CubeGrid, new Trailer(this, hinge));
+                        Trailers.Add(hinge.CubeGrid, new Trailer(this, hinge, ini.Get(Section, "ignore_handbrake").ToBoolean(), ini.Get(Section, "ignore_hingelock").ToBoolean()));
                     }
                     else
                         Hinges.Add(hinge);
