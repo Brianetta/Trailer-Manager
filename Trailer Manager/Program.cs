@@ -21,7 +21,7 @@ namespace IngameScript
 {
     partial class Program : MyGridProgram
     {
-        const string Version = "1.0.8";
+        const string Version = "1.0.9";
         List<IMyTerminalBlock> Blocks = new List<IMyTerminalBlock>();
         List<IMyMotorAdvancedStator> Hinges = new List<IMyMotorAdvancedStator>();
         List<IMyAttachableTopBlock> HingeParts = new List<IMyAttachableTopBlock>();
@@ -259,16 +259,14 @@ namespace IngameScript
 
         public void Mirror()
         {
-            bool? enabledState = null;
-            ChargeMode? chargeMode = null;
-            enabledState = StateToMirror(Batteries);
+            bool? enabledState = StateToMirror(Batteries);
             if (enabledState.HasValue)
             {
                 if (!enabledState.Value && PreviousBatteryEnabled)
                 {
                     AllTrailersDisableBattery();
                 }
-                chargeMode = ChargeToMirror(Batteries);
+                ChargeMode? chargeMode = ChargeToMirror(Batteries);
                 if ((enabledState.Value && !PreviousBatteryEnabled) || (chargeMode.HasValue && chargeMode != PreviousChargeMode))
                 {
                     AllTrailersBatteryCharge(chargeMode.Value);
@@ -402,9 +400,13 @@ namespace IngameScript
                 IMyMotorAdvancedStator hinge = block as IMyMotorAdvancedStator;
                 if (null != hinge && MyIni.HasSection(hinge.CustomData, Section) && ini.TryParse(hinge.CustomData))
                 {
-                    if (ini.Get(Section, "front").ToBoolean())
+                    if (ini.Get(Section, "front").ToBoolean())                        
                     {
-                        Trailers.Add(hinge.CubeGrid, new Trailer(this, hinge, ini.Get(Section, "ignore_handbrake").ToBoolean(), ini.Get(Section, "ignore_hingelock").ToBoolean()));
+                        Trailers.Add(hinge.CubeGrid, new Trailer(this, hinge,
+                            ini.Get(Section, "ignore_hingelock").ToBoolean(),
+                            ini.Get(Section, "hinge_action").ToBoolean(true),
+                            ini.Get(Section, "ignore_handbrake").ToBoolean(),
+                            ini.Get(Section, "handbrake_action").ToBoolean(true)));
                     }
                     else
                         Hinges.Add(hinge);
@@ -516,7 +518,9 @@ namespace IngameScript
                         if (Me.CubeGrid == Controller.CubeGrid)
                             this.Controller = Controller;
                         else if (Trailers.ContainsKey(Controller.CubeGrid))
+                        {
                             Trailers[Controller.CubeGrid].AddController(Controller);
+                        }
                 }
                 // Add timer to its trailer
                 string taskname;
